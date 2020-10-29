@@ -1,2 +1,2 @@
 # ticket-booking-app
-Ticket Booking App for booking events
+RESTful API Ticket Booking App Node Server
