@@ -11,7 +11,7 @@ router
   
 router.route("/admin/logout")
   .post(
-    authenticate,
+    authenticate.admin,
     authController.adminLogout
 );
 
@@ -38,6 +38,40 @@ router.route("/admin/confirm/:token").get(authController.adminConfirmMail);
 
 
 
+// Host Auth 
+router
+  .route("/host/login")
+    .post(authController.hostLogin);
+  
+router.route("/host/logout")
+  .post(
+    authenticate.host,
+    authController.hostLogout
+);
+
+router
+  .route("/host/recover")
+  .patch(
+    authController.hostSendResetPasswordLink
+  );
+
+router.route("/host/reset/:token").get(authController.hostResetPassword);
+
+router
+  .route("/host/newPassword")
+  .patch(
+    authController.hostSetNewPassword
+  );
+
+router.route("/host/confirm")
+  .post(
+    authController.hostSendConfirmationMail
+  );
+
+router.route("/host/confirm/:token").get(authController.hostConfirmMail);
+
+
+
 // User Auth
 router
   .route("/user/login")
@@ -45,7 +79,7 @@ router
   
 router.route("/user/logout")
   .post(
-    authenticate,
+    authenticate.user,
     authController.userLogout
   );
 
