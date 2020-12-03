@@ -2,7 +2,7 @@ const express = require("express"),
   router = express.Router(),
   authController = require("../controllers/auth"),
   { body, param } = require("express-validator"),
-  authenticate = require("../auth/auth");
+  authenticate = require("../auth/isAuth");
 
 // Admin Auth 
 router
