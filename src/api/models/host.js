@@ -145,36 +145,6 @@ const HostSchema = new Schema(
   }
 );
 
-HostSchema.statics.generateAuthToken = function (id) {
-  let token = jwt
-    .sign(
-      {
-        _id: id,
-      },
-      process.env.ACCESS_SECRET,
-      {
-        expiresIn: "5m",
-      }
-    )
-    .toString();
+const Host = mongoose.model('host', HostSchema);
 
-  return token;
-};
-
-HostSchema.statics.generateRefreshToken = function (id) {
-  let refresh = jwt
-    .sign(
-      {
-        _id: id,
-      },
-      process.env.REFRESH_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    )
-    .toString();
-  
-  return refresh;
-};
-
-module.exports = mongoose.model('Host', HostSchema);
+module.exports = { Host }; 

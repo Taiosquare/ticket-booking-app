@@ -68,38 +68,6 @@ const UserSchema = new Schema(
   }
 );
 
-UserSchema.statics.generateAuthToken = function (id) {
-  let token = jwt
-    .sign(
-      {
-        _id: id,
-      },
-      process.env.ACCESS_SECRET,
-      {
-        expiresIn: "5m",
-      }
-    )
-    .toString();
-
-  return token;
-};
-
-UserSchema.statics.generateRefreshToken = function (id) {
-  let refresh = jwt
-    .sign(
-      {
-        _id: id,
-      },
-      process.env.REFRESH_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    )
-    .toString();
-  
-  return refresh;
-};
-
 const User = mongoose.model("user", UserSchema);
 
 module.exports = { User };

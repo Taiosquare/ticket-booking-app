@@ -71,3 +71,39 @@ module.exports.decodeToken = async (token, secret, refresh, type) => {
     
     return decodedToken;
 }
+
+module.exports.generateAuthToken = function (id) {
+  let token = jwt
+    .sign(
+      {
+        _id: id,
+      },
+      process.env.ACCESS_SECRET,
+      {
+        expiresIn: "5m",
+      }
+    )
+    .toString();
+
+  return token;
+};
+
+module.generateRefreshToken = function (id) {
+  let refresh = jwt
+    .sign(
+      {
+        _id: id,
+      },
+      process.env.REFRESH_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    )
+    .toString();
+  
+  return refresh;
+};
+
+module.destroyToken = function (token) {
+    
+}

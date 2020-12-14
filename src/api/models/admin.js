@@ -55,7 +55,7 @@ const AdminSchema = new Schema(
         ref: "host",
     },
 
-    loggedIn: String,
+    token: String,
 
     confirmationToken: String,
 
@@ -72,38 +72,6 @@ const AdminSchema = new Schema(
     timestamps: true,
   }
 );
-
-AdminSchema.statics.generateAuthToken = function (id) {
-  let token = jwt
-    .sign(
-      {
-        _id: id,
-      },
-      process.env.ACCESS_SECRET,
-      {
-        expiresIn: "5m",
-      }
-    )
-    .toString();
-
-  return token;
-};
-
-AdminSchema.statics.generateRefreshToken = function (id) {
-  let refresh = jwt
-    .sign(
-      {
-        _id: id,
-      },
-      process.env.REFRESH_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    )
-    .toString();
-  
-  return refresh;
-};
 
 const Admin = mongoose.model("admin", AdminSchema);
 

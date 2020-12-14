@@ -5,6 +5,8 @@ const { Admin } = require("../models/admin"),
   { User } = require("../models/user"),
   AuthFunctions = require("../functions/authFunctions");
 
+// Function
+
 const admin = async (req, res, next) => {
     const authHeader = req.get("Authorization");
 
@@ -26,7 +28,7 @@ const admin = async (req, res, next) => {
                 try {
                     const admin = await Admin.findById(decodedToken.token._id);
 
-                    if (admin.loggedIn != "true") {
+                    if (admin.token == undefined) {
                         res.status(400).json({ error: "Unauthenticated Admin, Login" });
                     } else {
                         req.admin = admin;
@@ -64,7 +66,7 @@ const host = async (req, res, next) => {
                 try {
                     const host = await Host.findById(decodedToken.token._id);
 
-                    if (host.loggedIn != "true") {
+                    if (host.token == undefined) {
                         res.status(400).json({ error: "Unauthenticated Host, Login" });
                     } else {
                         req.host = host;
@@ -102,7 +104,7 @@ const user = async (req, res, next) => {
                 try {
                     const user = await User.findById(decodedToken.token._id);
 
-                    if (user.loggedIn != "true") {
+                    if (user.token == undefined) {
                         res.status(400).json({ error: "Unauthenticated User, Login" });
                     } else {
                         req.user = user;
