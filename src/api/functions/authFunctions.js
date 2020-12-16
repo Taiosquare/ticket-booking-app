@@ -1,9 +1,6 @@
 require("dotenv").config();
 
-const jwt = require("jsonwebtoken"),
-    { Admin } = require("../models/admin"),
-    { Host } = require("../models/host"),
-    { User } = require("../models/user"); 
+const jwt = require("jsonwebtoken");
 
 const refreshToken = async (token, type) => {
     let tok = '';
@@ -13,11 +10,11 @@ const refreshToken = async (token, type) => {
         decodedToken = jwt.verify(token, process.env.REFRESH_SECRET);
 
         if (type == "admin") {
-            tok = await Admin.generateAuthToken(decodedToken._id);
+            tok = await generateAuthToken(decodedToken._id);
         } else if (type == "host") {
-            tok = await Host.generateAuthToken(decodedToken._id);
+            tok = await generateAuthToken(decodedToken._id);
         } else if (type == "user") {
-            tok = await User.generateAuthToken(decodedToken._id);
+            tok = await generateAuthToken(decodedToken._id);
         }
     } catch (err) {
         if (err.message == "jwt expired") {
@@ -103,7 +100,3 @@ module.generateRefreshToken = function (id) {
   
   return refresh;
 };
-
-module.destroyToken = function (token) {
-    
-}
