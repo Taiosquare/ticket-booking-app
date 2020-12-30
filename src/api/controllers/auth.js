@@ -243,15 +243,138 @@ exports.adminResetPassword = async (req, res) => {
 };
 
 exports.adminSetNewPassword = async (req, res) => {
-  
+  const newPassword = req.body.newPassword,
+    adminId = req.body.adminId,
+    passwordToken = req.body.passwordToken,
+    errors = validationResult(req);
+
+  try {
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: await GeneralFunctions.validationErrorCheck(errors) });
+    } 
+      
+    const admin = await Admin.findOne({
+      resetToken: passwordToken,
+      _id: adminId,
+    });
+
+    let date = new Date();
+
+    if (admin.resetTokenExpiration < date) {
+      res.status(400).json({ error: "Reset Token Expired." });
+    } 
+
+    const hashedPassword = await argon2.hash(newPassword);
+    const access = await AuthFunctions.generateAuthToken(adminId);
+    const refresh = await Admin.generateRefreshToken(adminId);
+
+    admin.password = hashedPassword;
+    admin.resetToken = undefined;
+    admin.resetTokenExpiration = undefined;
+
+    await admin.save();
+
+    res.status(200).json({
+      message: "Password Reset Successful",
+      tokens: {
+        access: {
+          token: access,
+          expiresIn: "5m",
+        },
+        refresh: {
+          token: refresh,
+          expiresIn: "7d"
+        }
+      },
+    });
+  } catch (error) {
+    res.status(400).json({ error: "Password Reset Failed" });
+  }
 };
 
 exports.adminSendConfirmationMail = async (req, res) => {
-  
+  crypto.randomBytes(32, async (err, buffer) => {
+    const token = buffer.toString("hex"),
+      errors = validationResult(req);
+    
+    let address = "";
+
+    try {
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: await GeneralFunctions.validationErrorCheck(errors) });
+      } else {
+        let admin = await Admin.findById(req.body.adminId);
+        if (!admin.email) {
+          res.status(400).json({ error: "E-Mail Address not Registered" });
+        } else {
+          address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
+
+          let from = `Energy Direct energydirect@outlook.com`,
+            to = admin.email,
+            subject = "Admin Account Confirmation",
+            html = `<p>Good Day ${admin.username}</p> 
+                  <p>Please click this <a href="${address}/haulage/admin/auth/confirm/${token}">link</a> to confirm your email.`;
+
+          const data = {
+            from: from,
+            to: to,
+            subject: subject,
+            html: html,
+          };
+
+          admin.confirmationToken = token;
+          admin.confirmationTokenExpiration = Date.now() + 3600000;
+
+          await admin.save();
+
+          mailer
+            .sendEmail(data)
+            .then((success) => {
+              res
+                .status(200)
+                .json({ message: "E-Mail Confirmation Link Successfully Sent" });
+            })
+            .catch((error) => {
+              res
+                .status(400)
+                .json({ error: "E-Mail Confirmation Link Failed to Send" });
+            });
+        }
+      }
+    } catch (error) {
+      res.status(400).json({
+        error: "Error Generating E-Mail Confirmation Token, Please Try Again.",
+      });
+    }
+  });
 };
 
 exports.adminConfirmMail = async (req, res) => {
-  
+  const token = req.params.token;
+
+  try {
+    const admin = await Admin.findOne({
+      confirmationToken: token,
+    });
+
+    let date = new Date();
+
+    if (admin.confirmationTokenExpiration < date) {
+      res.status(400).json({ error: "Confirmation Token Expired." });
+    } else {
+      admin.confirmMail = true;
+      admin.confirmationToken = undefined;
+      admin.confirmationTokenExpiration = undefined;
+
+      await admin.save();
+
+      res.status(200).json({
+        message: "Admin E-Mail Successfully Confirmed",
+      });
+    }
+  } catch (error) {
+    res.status(400).json({ error: "Admin E-Mail Failed to Confirm" });
+  }
 };
 
 

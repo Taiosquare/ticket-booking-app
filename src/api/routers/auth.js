@@ -2,6 +2,7 @@ const express = require("express"),
   router = express.Router(),
   authController = require("../controllers/auth"),
   { body, param } = require("express-validator"),
+  passportFacebook = require('../auth/facebook'),
   authenticate = require("../auth/isAuth");
 
 // Admin Auth 
@@ -103,5 +104,18 @@ router.route("/user/confirm")
   );
 
 router.route("/user/confirm/:token").get(authController.userConfirmMail);
+
+router.route("/user/facebook")
+  .get(
+    passportFacebook.authenticate('facebook')
+  );
+
+router.route('/user/facebook/callback')
+  .get(
+    passportFacebook.authenticate('facebook', { failureRedirect: '/user/login' }),
+    (req, res) => {
+      res.redirect('/'); //redirect to home
+    }
+  );
 
 module.exports = router;
