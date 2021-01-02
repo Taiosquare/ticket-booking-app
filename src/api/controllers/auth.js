@@ -9,7 +9,7 @@ const { Admin } = require("../models/admin"),
   mailer = require("../../services/mailer"),
   { validationResult } = require("express-validator");
 
-exports.adminRegister = (req, res) => {
+exports.adminRegister = async (req, res) => {
   res.setHeader('access-token', req.token);
   const errors = validationResult(req);
 
@@ -163,7 +163,7 @@ exports.adminLogout = async (req, res) => {
   }
 };
 
-exports.adminSendResetPasswordLink = (req, res) => {
+exports.adminSendResetPasswordLink = async (req, res) => {
   crypto.randomBytes(32, async (err, buffer) => {
     if (err) {
       res.status(400).json({ error: "Error Generating Password Reset Token" });

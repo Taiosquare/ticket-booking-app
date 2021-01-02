@@ -1,19 +1,42 @@
 const passport = require('passport'),
-    FacebookStrategy = require('passport-facebook').Strategy,
-    { User } = require('../models/User');
+  FacebookStrategy = require('passport-facebook').Strategy,
+  mongoose = require("mongoose"),
+  { User } = require('../models/user');
 
 require("dotenv").config();
 
 passport.use(new FacebookStrategy({
-    clientID: PROCESS.ENV.FACEBOOK_APP_ID,
-    clientSecret: PROCESS.ENV.FACEBOOK_APP_SECRET,
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
     callbackURL: "http://localhost:3000/auth/facebook/callback"
   },
   (accessToken, refreshToken, profile, done) => {
-    User.findOrCreate({name: profile.displayName}, {name: profile.displayName,userid: profile.id}, function(err, user) {
-      if (err) { return done(err); }
-      done(null, user);
-    });
+    console.log("Yes");
+
+    // let firstName = profile.displayName.split(" ")[0];
+    // let lastName = profile.displayName.split(" ")[1];
+
+    // User.findOrCreate({name: profile.displayName}, {name: profile.displayName,userid: profile.id}, function(err, user) {
+    //   if (err) { return done(err); }
+    //   done(null, user);
+    // });
+
+    // User.findOrCreate(
+    //   { profileId: firstName },
+    //   {
+    //     _id: mongoose.Types.ObjectId(),
+    //     firstname: firstName,
+    //     lastname: lastname,
+    //     email: profile.email,
+    //     profileId: profile.id,
+    //     events: [],
+    //   },
+    //   (err, user) => 
+    //     {
+    //       if (err) { return done(err); }
+    //       done(null, user);
+    //     }
+    // );
   }
 ));
 

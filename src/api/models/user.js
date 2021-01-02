@@ -12,7 +12,7 @@ const UserSchema = new Schema(
 
     username: {
       type: String,
-      required: true,
+      //required: true,
     },
 
     firstname: {
@@ -32,7 +32,12 @@ const UserSchema = new Schema(
 
     password: {
       type: String,
-      required: true,
+      //required: true,
+    },
+
+    profileId: {
+      type: String,
+      //required: true,
     },
 
     verifiedMail: {
