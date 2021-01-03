@@ -2,6 +2,28 @@ const mongoose = require('mongoose'),
   { ObjectId } = require("mongodb"), 
   Schema = mongoose.Schema;
 
+const ImageSchema = new Schema({
+  normal: {
+    type: String,
+    required: true,
+  },
+
+  large: {
+    type: String,
+    required: true,
+  },
+
+  medium: {
+    type: String,
+    required: true,
+  },
+
+  small: {
+    type: String,
+    required: true,
+  },
+}); 
+
 const DateSchema = new Schema({
   begin: {
     type: Date,
@@ -96,7 +118,7 @@ const EventSchema = new Schema(
     },
       
     poster: {
-        type: String,
+        type: ImageSchema,
         required: true
     },
         
@@ -135,31 +157,26 @@ const EventSchema = new Schema(
     },
 
     minimumAgeGroup: {
-        type: Number,
+        type: String,
     },
 
-    maximumAgeGroup: {
-        type: Number,
-        set: set.deleteEmpty
-    },
+    // transferrable: {
+    //     type: Boolean,
+    //     default: true
+    // },
 
-    transferrable: {
-        type: Boolean,
-        default: true
-    },
-
-    refundable: {
-        type: Boolean,
-        default: true
-    },
+    // refundable: {
+    //     type: Boolean,
+    //     default: true
+    // },
 
     dates: {
         type: [DateSchema],
     },
 
-    refundPolicies: {
-        type: [String],
-    },
+    // refundPolicies: {
+    //     type: [String],
+    // },
 
     // views: {
     //     type: Array,
@@ -171,10 +188,12 @@ const EventSchema = new Schema(
         ref: "host",
     },
     
-    users: {
+    users: [
+      {
         type: Schema.Types.ObjectId,
         ref: "user",
-    }
+      },
+    ],
   },
   {
     autoCreate: true,

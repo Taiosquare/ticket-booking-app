@@ -89,7 +89,6 @@ const HostSchema = new Schema(
 
     brandWebsite: {
       type: String,
-      required: true
     },
 
     brandPhoneNumber: {
@@ -99,7 +98,6 @@ const HostSchema = new Schema(
 
     brandProfilePicture: {
       type: String,
-      required: true
     },
 
     address: {
@@ -125,6 +123,13 @@ const HostSchema = new Schema(
       type: Boolean,
       default: false,
     }, 
+
+    events: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "event",
+      },
+    ],
     
     loggedIn: String,
 

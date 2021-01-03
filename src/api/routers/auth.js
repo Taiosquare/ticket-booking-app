@@ -110,7 +110,7 @@ router.route("/user/facebook")
     passportFacebook.authenticate('facebook')
   );
 
-router.route('/user/facebook/callback')
+router.route('/user/facebook/redirect')
   .get(
     passportFacebook.authenticate('facebook', { failureRedirect: '/user/login' }),
     (req, res) => {
