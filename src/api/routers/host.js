@@ -26,14 +26,21 @@ router
     );
 
 router
-  .route("/event/:id")
+  .route("/viewEvent/:eventId")
     .get(
         authenticate.host,
         hostController.viewEvent
     );
+    
+router
+  .route("/viewUsers/:eventId")
+    .get(
+        authenticate.host,
+        hostController.viewRegisteredUsers
+    );
 
 router
-  .route("/events")
+  .route("/viewEvents")
     .get(
         authenticate.host,
         hostController.viewEvents

@@ -1,7 +1,6 @@
 const mongoose = require("mongoose"),
   { ObjectId } = require("mongodb"),
-  Schema = mongoose.Schema,
-  jwt = require("jsonwebtoken");
+  Schema = mongoose.Schema;
 
 const AdminSchema = new Schema(
   {

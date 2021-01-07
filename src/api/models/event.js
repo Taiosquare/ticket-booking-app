@@ -24,6 +24,30 @@ const ImageSchema = new Schema({
   },
 }); 
 
+const LocationSchema = new Schema({
+  state: {
+    type: String,
+    required: true,
+    index: "text"
+  },
+
+  localGovernment: {
+    type: String,
+    required: true,
+  },
+
+  town: {
+    type: String,
+    required: true,
+    index: "text"
+  },
+
+  address: {
+    type: String,
+    required: true,
+  },
+});
+
 const DateSchema = new Schema({
   begin: {
     type: Date,
@@ -113,8 +137,9 @@ const EventSchema = new Schema(
     },
         
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      index: "text"  
     },
       
     poster: {
@@ -133,8 +158,9 @@ const EventSchema = new Schema(
     },
 
     category: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      index: "text"
     },
 
     keywords: {
@@ -147,8 +173,8 @@ const EventSchema = new Schema(
     },
 
     location: {
-        type: String,
-        required: true
+      type: LocationSchema,
+      required: true,
     },
     
     tickets: {

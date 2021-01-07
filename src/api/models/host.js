@@ -1,7 +1,6 @@
 const mongoose = require('mongoose'),
   { ObjectId } = require("mongodb"),
-  Schema = mongoose.Schema,
-  jwt = require("jsonwebtoken");
+  Schema = mongoose.Schema;
 
 // Billing Information
 // const PaymentMethodSchema = new Schema({
@@ -64,7 +63,8 @@ const HostSchema = new Schema(
 
     brandName: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
 
     brandType: {
@@ -79,7 +79,8 @@ const HostSchema = new Schema(
 
     brandEmail: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
 
     password: {
