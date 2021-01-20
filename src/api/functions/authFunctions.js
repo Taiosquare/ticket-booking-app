@@ -7,15 +7,8 @@ const refreshToken = async (token, type) => {
     let decodedToken;
   
     try {
-        decodedToken = jwt.verify(token, process.env.REFRESH_SECRET);
-
-        if (type == "admin") {
-            tok = await generateAuthToken(decodedToken._id);
-        } else if (type == "host") {
-            tok = await generateAuthToken(decodedToken._id);
-        } else if (type == "user") {
-            tok = await generateAuthToken(decodedToken._id);
-        }
+        decodedToken = jwt.verify(token, process.env.REFRESH_SECRET);  
+        tok = await generateAuthToken(decodedToken._id);
     } catch (err) {
         if (err.message == "jwt expired") {
             tok = "expired";
@@ -44,13 +37,7 @@ module.exports.decodeToken = async (token, secret, refresh, type) => {
         if (err.message == "jwt expired") {
             let newToken = "";
             
-            if (type == "admin") {
-                newToken = await refreshToken(refresh, type);
-            } else if (type == "host") {
-                newToken = await refreshToken(refresh, type);
-            } else if (type == "user") {
-                newToken = await refreshToken(refresh, type);
-            }
+            newToken = await refreshToken(refresh, type);
 
             if (newToken == "expired") {
                 decodedToken.state = "expired";

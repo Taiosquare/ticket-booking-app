@@ -43,7 +43,7 @@ exports.adminRegister = async (req, res) => {
     } 
 
     const hashedPassword = await argon2.hash(req.body.password);
-    let id = mongoose.Types.ObjectId();
+    const id = mongoose.Types.ObjectId();
 
     const access = await AuthFunctions.generateAuthToken(id);
     const refresh = await AuthFunctions.generateRefreshToken(id);
@@ -219,7 +219,7 @@ exports.adminSendResetPasswordLink = async (req, res) => {
       }
     } catch (error) {
       res.status(400).json({
-        error: "Error generating password reset token, please try again.",
+        error: "Error sending password reset token, please try again.",
       });
     }
   });
@@ -253,7 +253,7 @@ exports.adminSetNewPassword = async (req, res) => {
       res.status(400).json({ errors: await GeneralFunctions.validationErrorCheck(errors) });
     } 
       
-    const admin = await Admin.findOne({
+    let admin = await Admin.findOne({
       resetToken: passwordToken,
       _id: adminId,
     });
@@ -266,7 +266,7 @@ exports.adminSetNewPassword = async (req, res) => {
 
     const hashedPassword = await argon2.hash(newPassword);
     const access = await AuthFunctions.generateAuthToken(adminId);
-    const refresh = await Admin.generateRefreshToken(adminId);
+    const refresh = await Auth.generateRefreshToken(adminId);
 
     admin.password = hashedPassword;
     admin.resetToken = undefined;

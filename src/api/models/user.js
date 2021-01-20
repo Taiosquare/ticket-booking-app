@@ -2,6 +2,20 @@ const mongoose = require("mongoose"),
   { ObjectId } = require("mongodb"),
   Schema = mongoose.Schema;
 
+const BookedEventsSchema = new Schema(
+  {
+    _id: {
+      type: Schema.Types.ObjectId,
+      ref: "event",
+    },
+
+    spacesReserved: {
+      type: Number,
+      required: true,
+    }
+  }
+)
+
 const UserSchema = new Schema(
   {
     _id: {
@@ -49,9 +63,8 @@ const UserSchema = new Schema(
       default: false,
     },
 
-    events: {
-        type: [Schema.Types.ObjectId],
-        ref: "event",
+    bookedEvents: {
+      type: [BookedEventsSchema]
     },
 
     loggedIn: String,

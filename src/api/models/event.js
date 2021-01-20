@@ -82,31 +82,31 @@ const DateRangeSchema = new Schema({
 
 const TicketsSchema = new Schema({
     type: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
 
     datesAvailable: {
-        type: DateRangeSchema,
-        required: true,
+      type: DateRangeSchema,
+      required: true,
     },
   
     availableTickets: {
-        type: String,
-        required: true
+      type: Number,
+      required: true
     },
 
     price: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     }, 
 
     additionalInfo: {
-        type: String,
+      type: String,
     },
 
     items: {
-        type: [String]
+      type: [String]
     }
 });
 
@@ -143,18 +143,18 @@ const EventSchema = new Schema(
     },
       
     poster: {
-        type: ImageSchema,
-        required: true
+      type: ImageSchema,
+      required: true
     },
         
     isPublic: {
-        type: Boolean, 
-        default: false
+      type: Boolean, 
+      default: false
     },
         
     isVirtual: {
-        type: Boolean, 
-        default: false
+      type: Boolean, 
+      default: false
     },
 
     category: {
@@ -184,6 +184,10 @@ const EventSchema = new Schema(
 
     minimumAgeGroup: {
         type: String,
+    },
+
+    availableSpace: {
+      type: Number,
     },
 
     // transferrable: {

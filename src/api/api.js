@@ -14,6 +14,6 @@ api.use("/auth", authRouter);
 api.use("/host", hostRouter);
 // api.use("/ticket", ticketRouter);
 // api.use("/upload", uploadRouter);
-// api.use("/user", userRouter);
+api.use("/user", userRouter);
 
 module.exports = api;

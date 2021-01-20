@@ -50,7 +50,13 @@ router
   .route("/viewEvents")
     .get(
         authenticate.user,
-        userController.viewRegisteredEvents
+        userController.viewBookedEvents
+);
+    
+router
+  .route("/success")
+    .post(
+        userController.paymentSuccess
     );
 
 module.exports = router;
