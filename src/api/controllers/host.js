@@ -62,7 +62,7 @@ exports.addEvent = async (req, res) => {
 
     const host = Host.findById(req.host._id).events.push(savedObject._id);
 
-    const [event, host] = await Promise.all([event.save(), host.save()]);
+    [event, host] = await Promise.all([event.save(), host.save()]);
 
     res.status(201).json({
         message: "Event successfully added",
@@ -139,7 +139,7 @@ exports.editEvent = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
   res.setHeader('access-token', req.token);
   const errors = validationResult(req),
-    id = req.params.eventId,
+    id = req.params.eventId;
 
   try {
     if (!errors.isEmpty()) {
@@ -194,6 +194,8 @@ exports.viewEvent = async (req, res) => {
       });
   }
 }
+
+exports.viewRegisteredUsers = async (req, res) => {}
 
 exports.viewEvents = async (req, res) => {
   res.setHeader('access-token', req.token);

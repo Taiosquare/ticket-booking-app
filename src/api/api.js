@@ -3,10 +3,10 @@ const express = require("express"),
     authRouter = require("./routers/auth"),
     // adminRouter = require("./routers/admin"),
     // eventRouter = require("./routers/event"),
-    hostRouter = require("./routers/host");
+    hostRouter = require("./routers/host"),
     // ticketRouter = require("./routers/ticket"),
     // uploadRouter = require('./routers/upload'),
-    // userRouter = require("./routers/user");
+    userRouter = require("./routers/user");
 
 api.use("/auth", authRouter);
 // api.use("/admin", adminRouter);
