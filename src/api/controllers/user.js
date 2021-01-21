@@ -3,6 +3,7 @@ require("dotenv").config();
 const { Event } = require("../models/event"),
   { User } = require("../models/user"),
   mongoose = require("mongoose"),
+  crypto = require("crypto"),
   GeneralFunctions = require("../functions/generalFunctions"),
   { validationResult } = require("express-validator");
 
@@ -176,13 +177,26 @@ exports.viewBookedEvents = async (req, res) => {
 }
 
 exports.paymentSuccess = async (req, res) => {
-    //validate event
-    var hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET).update(JSON.stringify(req.body)).digest('hex');
-    if (hash == req.headers['x-paystack-signature']) {
-      // Retrieve the request's body
-      var event = req.body;
-      console.log(event);
-      // Do something with event  
-    }
-    res.send(200);
+  console.log("Yes");
+  
+  //validate event
+  var hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET)
+    .update(JSON.stringify(req.body)).digest('hex');
+  
+  if (hash == req.headers['x-paystack-signature']) {
+    // Retrieve the request's body
+    var event = JSON.parse(req.body);
+    console.log(event); 
+
+    // let response = await fetch(`https://api.paystack.co/transaction/verify/${paystackRefNumber}`, {
+    //   method: "GET",
+    //   headers: {
+    //     authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
+    //   },
+    // });
+    
+    // console.log(response);  
+  }
+
+  res.send(200);
 }
