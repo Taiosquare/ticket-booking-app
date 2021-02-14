@@ -5,38 +5,45 @@ const express = require("express"),
   authenticate = require("../auth/isAuth");
  
 router
-  .route("/event/add")
+  .route("/addEvent")
     .post(
         authenticate.host,
         hostController.addEvent
     );
   
 router
-  .route("/event/edit")
+  .route("/editEvent")
     .patch(
         authenticate.host,
         hostController.editEvent
     );
-
+  
 router
-  .route("/event/delete")
+  .route("/deleteEvent")
     .delete(
         authenticate.host,
         hostController.deleteEvent
     );
 
 router
+  .route("/verifyTicketPayment/:eventId")
+    .put(
+        authenticate.host,
+        hostController.verifyTicketPayment
+    );
+
+router
+  .route("/viewRegisteredUsers/:eventId")
+    .get(
+        authenticate.host,
+        hostController.viewRegisteredUsers
+    );
+    
+router
   .route("/viewEvent/:eventId")
     .get(
         authenticate.host,
         hostController.viewEvent
-    );
-    
-router
-  .route("/viewUsers/:eventId")
-    .get(
-        authenticate.host,
-        hostController.viewRegisteredUsers
     );
 
 router

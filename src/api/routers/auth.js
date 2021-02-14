@@ -114,7 +114,7 @@ router.route('/user/facebook/redirect')
   .get(
     passportFacebook.authenticate('facebook', { failureRedirect: '/user/login' }),
     (req, res) => {
-      res.redirect('/'); //redirect to home
+      res.redirect('/');
     }
   );
 

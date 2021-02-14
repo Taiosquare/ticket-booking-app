@@ -96,25 +96,15 @@ exports.editEvent = async (req, res) => {
       let event = await Event.findById(id);
 
       req.body.title && (event.title = req.body.title);
-
       req.body.poster && (event.poster = req.body.poster);
-
       req.body.public && (event.isPublic = req.body.public);
-    
       req.body.virtual && (event.isVirtual = req.body.virtual);
-
       req.body.category && (event.category = req.body.category);
-
       req.body.keywords && (event.keywords = req.body.keywords);
-    
       req.body.description && (event.description = req.body.description);
-
       req.body.location && (event.location = req.body.location);
-
       req.body.tickets && (event.tickets = req.body.tickets);
-    
       req.body.minAge && (event.minimumAgeGroup = req.body.minAge);
-
       req.body.dates && (event.dates = req.body.dates);
 
       const result = await event.save();
@@ -171,6 +161,10 @@ exports.deleteEvent = async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: "Event Failed to Delete" });
   }
+}
+
+exports.verifyTicketPayment = async (req, res) => {
+  
 }
 
 exports.viewEvent = async (req, res) => {

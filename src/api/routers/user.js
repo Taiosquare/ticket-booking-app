@@ -5,58 +5,73 @@ const express = require("express"),
   authenticate = require("../auth/isAuth");
  
 router
-  .route("/events/search")
-    .post(
+  .route("/searchEvents")
+    .get(
         authenticate.user,
         userController.searchEvents
     );
   
 router
-  .route("/event/rate")
-    .patch(
+  .route("/rateEvent")
+    .put(
         authenticate.user,
         userController.rateEvent
     );
 
 router
-  .route("/event/book")
-    .delete(
+  .route("/bookEvent")
+    .post(
         authenticate.user,
         userController.bookEvent
     );
 
 router
-  .route("/event/purchase")
-    .get(
+  .route("/ticketPurchase/bank/:eventId")
+    .post(
         authenticate.user,
-        userController.purchaseTicket
+        userController.bankPayment
+);
+    
+router
+  .route("/verifyTicketPurchase/bank/:eventId")
+    .put(
+        authenticate.user,
+        userController.verifyBankPayment
+);
+    
+router
+  .route("/ticketPurchase/ussd/:eventId")
+    .post(
+        authenticate.user,
+        userController.ussdPayment
+);
+    
+router
+  .route("/verifyTicketPurchase/ussd/:eventId")
+    .put(
+        authenticate.user,
+        userController.verifyUssdPayment
     );
     
 router
-  .route("/event/purchase")
+  .route("/printTicket")
     .get(
         authenticate.user,
         userController.printTicket
     );
 
 router
-  .route("/viewEvent/:eventId")
+  .route("/viewEvent/:id")
     .get(
         authenticate.user,
         userController.viewEvent
-);
+    );
 
 router
   .route("/viewEvents")
     .get(
         authenticate.user,
         userController.viewBookedEvents
-);
-    
-router
-  .route("/success")
-    .post(
-        userController.paymentSuccess
     );
-
+    
 module.exports = router;
