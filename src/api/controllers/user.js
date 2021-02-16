@@ -8,31 +8,83 @@ const { Event } = require("../models/event"),
   { validationResult } = require("express-validator");
 
 exports.searchEvents = async (req, res) => {
-    res.setHeader('access-token', req.token);
-    const keyword = req.body.keyword || "";
-    // Search Criterias: title, category, isVirtual, isPublic, location, dates
+  res.setHeader('access-token', req.token);
+  const errors = validationResult(req);
     
-    try {
-        const events = await Event.find(
-            { $text: { $search: keyword } },
-            { score: { $meta: "textScore" } }
-        )
-            .sort({ score: { $meta: "textScore" } })
-            .select("title category location dates")
+  // Search Criterias: title, category, isVirtual, isPublic, location, dates
+    
+  try {
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    } else {
+      const keyword = req.body.keyword || "";
+    
+      const events = await Event.find(
+        { $text: { $search: keyword } },
+        { score: { $meta: "textScore" } }
+      )
+        .sort({ score: { $meta: "textScore" } })
+        .select("title category location dates")
 
-        //events == null ? events = :
-        res.status(200).json({
-            events: events
-        });
-    } catch (error) {
-        res.status(400).json({
-            error: "error Fetching Events",
-        });
+      //events == null ? events = :
+      res.status(200).json({
+        events: events
+      });
     }
+  } catch (error) {
+      res.status(400).json({
+          error: "error Fetching Events",
+      });
+  }
 }
 
 exports.rateEvent = async (req, res) => {
-  
+  res.setHeader('access-token', req.token);
+  const errors = validationResult(req);
+    
+  try {
+    if (!errors.isEmpty()) {
+        res.status(400).json({
+            errors: await GeneralFunctions.validationErrorCheck(errors)
+        });
+    } else {
+      const id = req.params.eventId,
+        rating = req.body.rating;
+      
+      await User.updateOne(
+        { _id: req.user._id },
+        {
+          $set: {
+            "ratedEvents.id": id,
+            "ratedEvents.rating": rating
+          }
+        } 
+      );
+      
+      let event = await Event.findById(id);
+
+      // let user = await User.findById(req.user._id);
+
+      event.rating.numofRatings++;
+      event.rating.averageScore = (event.rating.averageScore + rating) / event.rating.numofRatings;
+      
+      // user.ratedEvents.id = id;
+      // user.ratedEvents.rating = rating;
+
+      await event.save();
+      // await user.save();
+
+      res.status(200).json({
+        message: 'Event successfully rated'
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      error: "Error Rating Event, please try again.",
+    });
+  }
 }
 
 exports.bookEvent = async (req, res) => {
@@ -42,38 +94,41 @@ exports.bookEvent = async (req, res) => {
     
   try {
     if (!errors.isEmpty()) {
-        res.status(400).json({
-            errors: await GeneralFunctions.validationErrorCheck(errors)
-        });
-    } 
+      res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    } else {
       
-    const { eventId, userId, spacesBooked } = req.body;
+      const { eventId, userId, spacesBooked } = req.body;
     
-    let user = await User.findById(userId);
+      let user = await User.findById(userId);
       
-    if (!user) {
+      if (!user) {
         res.status(400).json({
-            error: "Non-Existent User",
+          error: "Non-Existent User",
         });
-    } 
+      } else {
       
-    //add user to events users during payment
-    await Event.updateOne({ _id: eventId },
-        {
+        //add user to events users during payment
+        await Event.updateOne(
+          { _id: eventId },
+          {
             $set: { $subtract: ["$availableSpace", spacesBooked] },
-        }
-    );
+          }
+        );
 
-    user.bookedEvents.push({
-        _id: eventId,
-        spaceReserved: spacesBooked
-    });
+        user.bookedEvents.push({
+          _id: eventId,
+          spaceReserved: spacesBooked
+        });
       
-    await user.save();
+        await user.save();
 
-    res.status(201).json({
-        message: "Event successfully booked. Your booking will expire if you don't pay within 24 hours.",
-    });
+        res.status(201).json({
+          message: "Event successfully booked. Your booking will expire if you don't pay within 24 hours.",
+        });
+      } 
+    }
   } catch (error) {
     res.status(400).json({
       error: "Error Booking Event, please try again.",
@@ -103,10 +158,11 @@ exports.printTicket = async (req, res) => {
 
 exports.viewEvent = async (req, res) => {
   res.setHeader('access-token', req.token);
-  const id = req.body.id;
+  const errors = validationResult(req);
     
   try {
-    const event = await Event.findById(id);
+    const id = req.body.id,
+      event = await Event.findById(id);
 
     res.status(200).json({ event: event });
   } catch (error) {
@@ -132,25 +188,4 @@ exports.viewBookedEvents = async (req, res) => {
   }
 }
 
-exports.paymentSuccess = async (req, res) => {
-  //validate event
-  var hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET)
-    .update(JSON.stringify(req.body)).digest('hex');
-  
-  if (hash == req.headers['x-paystack-signature']) {
-    // Retrieve the request's body
-    var event = JSON.parse(req.body);
-    console.log(event); 
 
-    // let response = await fetch(`https://api.paystack.co/transaction/verify/${paystackRefNumber}`, {
-    //   method: "GET",
-    //   headers: {
-    //     authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
-    //   },
-    // });
-    
-    // console.log(response);  
-  }
-
-  res.send(200);
-}

@@ -136,28 +136,29 @@ exports.deleteEvent = async (req, res) => {
       res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } 
+    } else {
     
-    let event = await Event.findById(id);
+      let event = await Event.findById(id);
 
-    if (event.host != req.user._id) {
-      res.status(400).json({
-        error: "This User cannot delete this event",
-      });
-    } 
+      if (event.host != req.user._id) {
+        res.status(400).json({
+          error: "This User cannot delete this event",
+        });
+      } else {
 
-    let host = await Host.findById(req.host._id);
+        let host = await Host.findById(req.host._id);
 
-    host.vehicles.pull(vehicleId);
+        host.vehicles.pull(vehicleId);
 
-    await host.save();
+        await host.save();
 
-    await Event.findByIdAndDelete(id);
+        await Event.findByIdAndDelete(id);
 
-    res.status(200).json({
-      message: "Event Deleted Successfully",
-    });
-       
+        res.status(200).json({
+          message: "Event Deleted Successfully",
+        });
+      }
+    }
   } catch (error) {
     res.status(400).json({ error: "Event Failed to Delete" });
   }
@@ -165,6 +166,29 @@ exports.deleteEvent = async (req, res) => {
 
 exports.verifyTicketPayment = async (req, res) => {
   
+}
+
+exports.viewRegisteredUsers = async (req, res) => {
+  res.setHeader('access-token', req.token);
+  const id = req.params.eventId,
+    errors = validationResult(req);
+
+  try {
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    } else {
+      const users = await Event.findById(id)
+        .select('users').populate('users.id', 'username firstname lastname email');
+
+      res.status(200).json({ registeredUsers: users });
+    }
+  } catch (error) {
+    res.status(400).json({
+      error: "Error Fetching User's Events, please try again.",
+    });
+  }
 }
 
 exports.viewEvent = async (req, res) => {
@@ -188,8 +212,6 @@ exports.viewEvent = async (req, res) => {
       });
   }
 }
-
-exports.viewRegisteredUsers = async (req, res) => {}
 
 exports.viewEvents = async (req, res) => {
   res.setHeader('access-token', req.token);

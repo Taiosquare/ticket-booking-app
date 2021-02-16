@@ -132,7 +132,7 @@ const HostSchema = new Schema(
       },
     ],
     
-    loggedIn: String,
+    token: String,
 
     confirmationToken: String,
 

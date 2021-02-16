@@ -67,7 +67,20 @@ const UserSchema = new Schema(
       type: [BookedEventsSchema]
     },
 
-    loggedIn: String,
+    ratedEvents: [
+      {
+        id: {
+          type: Schema.Types.ObjectId,
+          ref: "event",
+        },
+
+        rating: {
+          type: Number,
+        }
+      }
+    ],
+
+    token: String,
 
     confirmationToken: String,
 

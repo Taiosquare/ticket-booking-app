@@ -139,7 +139,7 @@ const EventSchema = new Schema(
     title: {
       type: String,
       required: true,
-      index: "text"  
+      index: "text"
     },
       
     poster: {
@@ -148,12 +148,12 @@ const EventSchema = new Schema(
     },
         
     isPublic: {
-      type: Boolean, 
+      type: Boolean,
       default: false
     },
         
     isVirtual: {
-      type: Boolean, 
+      type: Boolean,
       default: false
     },
 
@@ -164,12 +164,12 @@ const EventSchema = new Schema(
     },
 
     keywords: {
-        type: [String]
+      type: [String]
     },
 
     description: {
-        type: String,
-        required: true
+      type: String,
+      required: true
     },
 
     location: {
@@ -178,12 +178,12 @@ const EventSchema = new Schema(
     },
     
     tickets: {
-        type: [TicketsSchema],
-        required: true
+      type: TicketsSchema,
+      required: true
     },
 
     minimumAgeGroup: {
-        type: String,
+      type: String,
     },
 
     availableSpace: {
@@ -201,7 +201,17 @@ const EventSchema = new Schema(
     // },
 
     dates: {
-        type: [DateSchema],
+      type: [DateSchema],
+    },
+
+    rating: {
+      averageScore: {
+        type: Number
+      },
+
+      numOfRatings: {
+        type: Number
+      }
     },
 
     // refundPolicies: {
@@ -220,9 +230,15 @@ const EventSchema = new Schema(
     
     users: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "user",
-      },
+        id: {
+          type: Schema.Types.ObjectId,
+          ref: "user",
+        },
+
+        numOfTickets: {
+          type: Number,
+        }
+      }
     ],
   },
   {

@@ -7,9 +7,9 @@ router
   .route("/success")
     .post(systemController.paymentSuccess);
     
-router
-  .route("/notificationReminder/:eventId") 
-    .post(systemController.notificationReminder);
+// router
+//   .route("/notificationReminder/:eventId") 
+//     .post(systemController.notificationReminder);
     
 router
   .route("/payHost/:id")

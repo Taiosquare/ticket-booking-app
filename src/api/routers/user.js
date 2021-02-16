@@ -12,7 +12,7 @@ router
     );
   
 router
-  .route("/rateEvent")
+  .route("/rateEvent/:eventId")
     .put(
         authenticate.user,
         userController.rateEvent
