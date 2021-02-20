@@ -49,10 +49,12 @@ const AdminSchema = new Schema(
       default: false,
     },
 
-    approvedHosts: {
-        type: [Schema.Types.ObjectId],
+    approvedHosts: [
+      {
+        type: Schema.Types.ObjectId,
         ref: "host",
-    },
+      }
+    ],
 
     token: String,
 

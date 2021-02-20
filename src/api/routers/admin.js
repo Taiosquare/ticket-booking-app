@@ -5,21 +5,21 @@ const express = require("express"),
   authenticate = require("../auth/isAuth");
 
 router
-  .route("/approveHost/:id")
+  .route("/approveHost/:hostId")
     .put(
         authenticate.admin,
         adminController.approveHost
     );
   
 router
-  .route("/suspendHost/:id")
+  .route("/suspendHost/:hostId")
     .put(
         authenticate.admin,
         adminController.suspendHost
     );
   
 router
-  .route("/viewUser/:id")
+  .route("/viewUser/:userId")
     .get(
         authenticate.admin,
         adminController.getUser
@@ -32,15 +32,15 @@ router
         adminController.getUsers
     );
     
-router
-  .route("/viewPurchasedTickets/:userId")
-    .get(
-        authenticate.admin,
-        adminController.getTickets
-    );
+// router
+//   .route("/viewPurchasedTickets/:userId")
+//     .get(
+//         authenticate.admin,
+//         adminController.getTickets
+//     );
     
 router
-  .route("/viewHost/:id")
+  .route("/viewHost/:hostId")
     .get(
         authenticate.admin,
         adminController.getHost
@@ -54,14 +54,14 @@ router
     );
     
 router
-  .route("/viewEvents/:hostId")
+  .route("/viewEvents")
     .get(
         authenticate.admin,
         adminController.getEvents
     );
     
 router
-  .route("/viewAdmin/:id")
+  .route("/viewAdmin/:adminId")
     .get(
       authenticate.admin,
       adminController.getAdministrator
@@ -75,7 +75,7 @@ router
     );
     
 router
-  .route("/suspendAdmin/:id")
+  .route("/suspendAdmin/:adminId")
     .put(
       authenticate.admin,
       adminController.suspendAdministrator

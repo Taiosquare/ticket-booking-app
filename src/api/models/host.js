@@ -125,6 +125,16 @@ const HostSchema = new Schema(
       default: false,
     }, 
 
+    isApproved: {
+      type: Boolean,
+      default: false,
+    }, 
+
+    accountSuspended: {
+      type: Boolean,
+      default: false,
+    }, 
+
     events: [
       {
         type: Schema.Types.ObjectId,
