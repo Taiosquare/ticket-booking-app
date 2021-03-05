@@ -16,6 +16,45 @@ const BookedEventsSchema = new Schema(
   }
 )
 
+const PaymentSchema = new Schema(
+  {
+    reference: {
+      type: String,
+      required: true,
+    },
+
+    amount: {
+      type: Number,
+      required: true,
+    },
+
+    currency: {
+      type: String,
+      required: true,
+    },
+
+    paidAt: {
+      type: Date,
+      required: true
+    },
+
+    bank: {
+      type: String,
+      required: true
+    },
+
+    tickets: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ticket",
+      }
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const UserSchema = new Schema(
   {
     _id: {
@@ -65,6 +104,10 @@ const UserSchema = new Schema(
 
     bookedEvents: {
       type: [BookedEventsSchema]
+    },
+
+    payments: {
+      type: [PaymentSchema]
     },
 
     ratedEvents: [

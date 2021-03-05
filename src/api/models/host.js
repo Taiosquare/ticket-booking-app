@@ -2,58 +2,6 @@ const mongoose = require('mongoose'),
   { ObjectId } = require("mongodb"),
   Schema = mongoose.Schema;
 
-// Billing Information
-// const PaymentMethodSchema = new Schema({
-//   cardName: {
-//     type: String,
-//     required: true
-//   },
-
-//   cardno: {
-//     type: String,
-//     required: true
-//   },
-
-//   cvv: {
-//     type: String,
-//     required: true
-//   },
-
-//   expirymonth: {
-//     type: String,
-//     required: true
-//   },
-
-//   expiryyear: {
-//     type: String,
-//     required: true
-//   },
-
-//   pin: {
-//     type: String
-//   },
-
-//   country: {
-//     type: String,
-//     default: "NG"
-//   },
-
-//   currency: {
-//     type: String,
-//     default: "NGN"
-//   },
-
-//   txRef: {
-//     type: String,
-//     default: "MC-7663-YU"
-//   },
-
-//   suggested_auth: {
-//     type: String,
-//     default: "NOAUTH"
-//   },
-// });
-
 const HostSchema = new Schema(
   {
     _id: {
@@ -123,17 +71,17 @@ const HostSchema = new Schema(
     verifiedMail: {
       type: Boolean,
       default: false,
-    }, 
+    },
 
     isApproved: {
       type: Boolean,
       default: false,
-    }, 
+    },
 
     accountSuspended: {
       type: Boolean,
       default: false,
-    }, 
+    },
 
     events: [
       {
@@ -141,7 +89,7 @@ const HostSchema = new Schema(
         ref: "event",
       },
     ],
-    
+
     token: String,
 
     confirmationToken: String,

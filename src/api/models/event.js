@@ -1,5 +1,5 @@
 const mongoose = require('mongoose'),
-  { ObjectId } = require("mongodb"), 
+  { ObjectId } = require("mongodb"),
   Schema = mongoose.Schema;
 
 const ImageSchema = new Schema({
@@ -22,7 +22,7 @@ const ImageSchema = new Schema({
     type: String,
     required: true,
   },
-}); 
+});
 
 const LocationSchema = new Schema({
   state: {
@@ -53,19 +53,19 @@ const DateSchema = new Schema({
     type: Date,
     required: true
   },
-    
+
   end: {
     type: Date,
     required: true
   },
-  
+
   days: {
     type: [Number]
   },
-  
-    //   times: {
-    //     type: Array
-    //   }
+
+  //   times: {
+  //     type: Array
+  //   }
 });
 
 const DateRangeSchema = new Schema({
@@ -81,33 +81,33 @@ const DateRangeSchema = new Schema({
 
 
 const TicketsSchema = new Schema({
-    type: {
-      type: String,
-      required: true,
-    },
+  type: {
+    type: String,
+    required: true,
+  },
 
-    datesAvailable: {
-      type: DateRangeSchema,
-      required: true,
-    },
-  
-    availableTickets: {
-      type: Number,
-      required: true
-    },
+  datesAvailable: {
+    type: DateRangeSchema,
+    required: true,
+  },
 
-    price: {
-      type: String,
-      required: true,
-    }, 
+  availableTickets: {
+    type: Number,
+    required: true
+  },
 
-    additionalInfo: {
-      type: String,
-    },
+  price: {
+    type: Number,
+    required: true,
+  },
 
-    items: {
-      type: [String]
-    }
+  additionalInfo: {
+    type: String,
+  },
+
+  items: {
+    type: [String]
+  }
 });
 
 // const PerksSchema = new Schema({
@@ -135,26 +135,21 @@ const EventSchema = new Schema(
       type: ObjectId,
       required: true,
     },
-        
+
     title: {
       type: String,
       required: true,
       index: "text"
     },
-      
+
     poster: {
       type: ImageSchema,
       required: true
     },
-        
-    isPublic: {
-      type: Boolean,
-      default: false
-    },
-        
-    isVirtual: {
-      type: Boolean,
-      default: false
+
+    type: {
+      type: String,
+      required: true
     },
 
     category: {
@@ -176,7 +171,7 @@ const EventSchema = new Schema(
       type: LocationSchema,
       required: true,
     },
-    
+
     tickets: {
       type: TicketsSchema,
       required: true
@@ -201,7 +196,7 @@ const EventSchema = new Schema(
     // },
 
     dates: {
-      type: [DateSchema],
+      type: DateSchema,
     },
 
     rating: {
@@ -224,10 +219,10 @@ const EventSchema = new Schema(
     // },
 
     host: {
-        type: Schema.Types.ObjectId,
-        ref: "host",
+      type: Schema.Types.ObjectId,
+      ref: "host",
     },
-    
+
     users: [
       {
         id: {
@@ -240,6 +235,8 @@ const EventSchema = new Schema(
         }
       }
     ],
+
+    transferCode: String,
   },
   {
     autoCreate: true,
@@ -249,6 +246,6 @@ const EventSchema = new Schema(
   }
 );
 
-const Event = mongoose.model('event', EventSchema); 
+const Event = mongoose.model('event', EventSchema);
 
 module.exports = { Event };
