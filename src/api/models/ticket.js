@@ -14,6 +14,11 @@ const TicketSchema = new Schema(
       required: true,
     },
 
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "user"
+    },
+
     // isUsed: {
     //   type: Boolean,
     //   default: false

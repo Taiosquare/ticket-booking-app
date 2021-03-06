@@ -145,15 +145,15 @@ exports.bankPayment = async (req, res) => {
 }
 
 exports.verifyBankPayment = async (req, res) => {
-  EventFunctions.bankPayment(req, res, req.params.eventId);
+  EventFunctions.bankPaymentVerification(req, res, req.params.eventId);
 }
 
 exports.ussdPayment = async (req, res) => {
-
+  EventFunctions.ussdPayment(req, res, req.params.eventId);
 }
 
 exports.verifyUssdPayment = async (req, res) => {
-
+  EventFunctions.ussdPaymentVerification(req, res, req.params.eventId);
 }
 
 exports.printTicket = async (req, res) => {
