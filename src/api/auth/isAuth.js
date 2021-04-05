@@ -1,13 +1,11 @@
 require("dotenv").config();
 
 const { Admin } = require("../models/admin"),
-  { Host } = require("../models/host"),
-  { User } = require("../models/user"),
-  AuthFunctions = require("../functions/authFunctions");
+    { Host } = require("../models/host"),
+    { User } = require("../models/user"),
+    AuthFunctions = require("../functions/authFunctions");
 
-// Function
-
-const admin = async (req, res, next) => {
+const user = async (req, res, next, userType, Model) => {
     const authHeader = req.get("Authorization");
 
     try {
@@ -18,107 +16,44 @@ const admin = async (req, res, next) => {
             let decodedToken;
             let refresh = req.headers['refresh-token'];
 
-            decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, 'admin');
+            decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, userType);
 
             if (decodedToken.error) {
                 res.status(400).json({ error: decodedToken.error });
             } else if (decodedToken.state == "expired") {
-                res.status(200).json({ message: "Token Expired, Login" });
+                res.status(400).json({ error: "Token Expired, Login" });
             } else if (decodedToken.state == "active") {
                 try {
-                    const admin = await Admin.findById(decodedToken.token._id);
+                    const user = await Model.findById(decodedToken.token._id);
 
-                    if (admin.token == undefined) {
-                        res.status(400).json({ error: "Unauthenticated Admin, Login" });
+                    if (user.token == undefined) {
+                        res.status(400).json({ error: `Unauthenticated ${userType}, Login` });
                     } else {
-                        req.admin = admin;
+                        req.user = user;
                         req.token = decodedToken.newToken;
+
                         next();
                     }
                 } catch (error) {
-                    res.status(400).json({ error: "Admin not Found" });
+                    res.status(404).json({ error: `${userType} not Found` });
                 }
             }
         }
     } catch (error) {
         res.status(400).json({ error: "Error Authenticating Admin" });
     }
+}
+
+const admin = async (req, res, next) => {
+    user(req, res, next, "admin", Admin);
 };
 
 const host = async (req, res, next) => {
-    const authHeader = req.get("Authorization");
-
-    try {
-        if (!authHeader) {
-            res.status(400).json({ error: "No Authentication Header" });
-        } else {
-            const token = authHeader.split(" ")[1];
-            let decodedToken;
-            let refresh = req.headers['refresh-token'];
-
-            decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, 'host');
-
-            if (decodedToken.error) {
-                res.status(400).json({ error: decodedToken.error });
-            } else if (decodedToken.state == "expired") {
-                res.status(200).json({ message: "Token Expired, Login" });
-            } else if (decodedToken.state == "active") {
-                try {
-                    const host = await Host.findById(decodedToken.token._id);
-
-                    if (host.token == undefined) {
-                        res.status(400).json({ error: "Unauthenticated Host, Login" });
-                    } else {
-                        req.host = host;
-                        req.token = decodedToken.newToken;
-                        next();
-                    }
-                } catch (error) {
-                    res.status(400).json({ error: "Host not Found" });
-                }
-            }
-        }
-    } catch (error) {
-        res.status(400).json({ error: "Error Authenticating Host" });
-    }
+    user(req, res, next, "host", Host);
 };
 
 const user = async (req, res, next) => {
-    const authHeader = req.get("Authorization");
-
-    try {
-        if (!authHeader) {
-            res.status(400).json({ error: "No Authentication Header" });
-        } else {
-            const token = authHeader.split(" ")[1];
-            let decodedToken;
-            let refresh = req.headers['refresh-token'];
-
-            decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, 'user');
-
-            if (decodedToken.error) {
-                res.status(400).json({ error: decodedToken.error });
-            } else if (decodedToken.state == "expired") {
-                res.status(200).json({ message: "Token Expired, Login" });
-            } else if (decodedToken.state == "active") {
-                try {
-                    const user = await User.findById(decodedToken.token._id);
-
-                    if (user.token == undefined) {
-                        res.status(400).json({ error: "Unauthenticated User, Login" });
-                    } else {
-                        req.user = user;
-                        req.token = decodedToken.newToken;
-                        next();
-                    }
-                } catch (error) {
-                    res.status(400).json({ error: "User not Found" });
-                }
-            }
-        }
-    } catch (error) {
-        res.status(400).json({ error: "Error Authenticating User" });
-    }
+    user(req, res, next, "user", User);
 };
 
 module.exports.admin = admin;

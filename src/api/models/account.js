@@ -70,7 +70,7 @@ const AccountSchema = new Schema(
       type: [PaymentSchema]
     },
 
-    //recepientCode: String,
+    recepientCode: String,
   },
   {
     autoCreate: true,

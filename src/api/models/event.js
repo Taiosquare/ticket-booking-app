@@ -79,7 +79,6 @@ const DateRangeSchema = new Schema({
   }
 });
 
-
 const TicketsSchema = new Schema({
   type: {
     type: String,
@@ -89,6 +88,11 @@ const TicketsSchema = new Schema({
   datesAvailable: {
     type: DateRangeSchema,
     required: true,
+  },
+
+  totalTickets: {
+    type: Number,
+    required: true
   },
 
   availableTickets: {

@@ -150,8 +150,7 @@ const ussdPayment = async (req, res, eventId) => {
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
         } else {
-            const { email, ussd, numOfTickets } = req.body,
-                id = req.params.appointmentId;
+            const { email, ussd, numOfTickets } = req.body;
 
             let event = await Event.findById(eventId);
 
