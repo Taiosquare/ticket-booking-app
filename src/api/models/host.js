@@ -2,6 +2,29 @@ const mongoose = require('mongoose'),
   { ObjectId } = require("mongodb"),
   Schema = mongoose.Schema;
 
+const Image = new Schema({
+  normal: {
+    type: String,
+    required: true,
+  },
+
+  large: {
+    type: String,
+    required: true,
+  },
+
+  medium: {
+    type: String,
+    required: true,
+  },
+
+  small: {
+    type: String,
+    required: true,
+  },
+});
+
+// Admin Fields might be required
 const HostSchema = new Schema(
   {
     _id: {
@@ -25,7 +48,7 @@ const HostSchema = new Schema(
       required: true
     },
 
-    brandEmail: {
+    email: {
       type: String,
       required: true,
       unique: true
@@ -46,7 +69,7 @@ const HostSchema = new Schema(
     },
 
     brandProfilePicture: {
-      type: String,
+      type: Image,
     },
 
     address: {
@@ -54,18 +77,14 @@ const HostSchema = new Schema(
       required: true
     },
 
-    securityQuestion: {
-      type: String,
-      required: true
-    },
+    // securityQuestion: {
+    //   type: String,
+    //   required: true
+    // },
 
-    securityAnswer: {
-      type: String,
-      required: true
-    },
-
-    // paymentMethod: {
-    //   type: PaymentMethodSchema,
+    // securityAnswer: {
+    //   type: String,
+    //   required: true
     // },
 
     verifiedMail: {
@@ -99,7 +118,6 @@ const HostSchema = new Schema(
     resetToken: String,
 
     resetTokenExpiration: Date,
-
   },
   {
     autoCreate: true,
@@ -111,4 +129,4 @@ const HostSchema = new Schema(
 
 const Host = mongoose.model('host', HostSchema);
 
-module.exports = { Host }; 
+module.exports = { Host };

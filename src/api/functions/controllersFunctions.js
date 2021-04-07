@@ -7,13 +7,12 @@ const mongoose = require("mongoose"),
     GeneralFunctions = require("./generalFunctions"),
     fetch = require("node-fetch");
 
-
 const logout = async (req, res, id, Model, userType) => {
-    const errors = validationResult(req);
-
     try {
+        const errors = validationResult(req);
+
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
         }
@@ -34,69 +33,55 @@ const logout = async (req, res, id, Model, userType) => {
     }
 }
 
-// Custom Error Message Here
 const sendResetPasswordLink = async (req, res, email, Model, userType, sendType) => {
     try {
-        crypto.randomBytes(32, async (err, buffer) => {
-            // if (err) {
-            //   res.status(400).json({ error: "Error Generating Password Reset Token" });
-            // }
+        const errors = validationResult(req),
+            token = await crypto.randomBytes(16).toString("hex");
 
-            const token = buffer.toString("hex"),
-                errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                errors: await GeneralFunctions.validationErrorCheck(errors)
+            });
+        }
 
-            let name = "", address = "";
+        let user = await Model.findOne({ email: email });
+        let name = "", address = "";
 
-            if (!errors.isEmpty()) {
-                res.status(400).json({
-                    errors: await GeneralFunctions.validationErrorCheck(errors)
-                });
-            } else {
-                let user = await Model.findOne({ email: email });
+        if (!user) {
+            return res.status(400).json({
+                error: "E-Mail Address not Found"
+            });
+        }
 
-                if (!user) {
-                    res.status(400).json({ error: "E-Mail Address not Found" });
-                } else {
+        user.resetToken = token;
+        user.resetTokenExpiration = Date.now() + 3600000;
 
-                    user.resetToken = token;
-                    user.resetTokenExpiration = Date.now() + 3600000;
+        user.save();
 
-                    user.save();
+        if (userType == "Admin") { name = user.username; }
+        if (userType == "Regular User") { name = user.firstname; }
+        if (userType == "Service Provider" || "Business User") { name = user.companyName; }
 
-                    if (userType == "Admin") { name = user.username; }
-                    if (userType == "Regular User") { name = user.firstname; }
-                    if (userType == "Service Provider" || "Business User") { name = user.companyName; }
+        address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
 
-                    address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
+        let from = `Energy Direct energydirect@outlook.com`,
+            to = user.email,
+            subject = `${userType} Account Password Reset`,
+            html = `<p>Good Day ${name},</p> 
+        <p>Please click this <a href="${address}/auth/${sendType}/reset/${token}">
+        link</a> to reset your password.</p>`;
 
-                    let from = `Energy Direct energydirect@outlook.com`,
-                        to = user.email,
-                        subject = `${userType} Account Password Reset`,
-                        html = `<p>Good Day ${name},</p> 
-                  <p>Please click this <a href="${address}/auth/${sendType}/reset/${token}">
-                  link</a> to reset your password.</p>`;
+        const data = {
+            from: from,
+            to: to,
+            subject: subject,
+            html: html,
+        };
 
-                    const data = {
-                        from: from,
-                        to: to,
-                        subject: subject,
-                        html: html,
-                    };
+        await mailer.sendEmail(data);
 
-                    mailer
-                        .sendEmail(data)
-                        .then((success) => {
-                            res
-                                .status(200)
-                                .json({ message: "Password Reset Link Successfully Sent" });
-                        })
-                        .catch((error) => {
-                            res
-                                .status(400)
-                                .json({ error: "Password Reset Link Failed to Send" });
-                        });
-                }
-            }
+        res.status(200).json({
+            message: "Password Reset Link Successfully Sent"
         });
     } catch (error) {
         res.status(400).json({
@@ -121,125 +106,112 @@ const resetPassword = async (req, res, token, Model, userType) => {
 }
 
 const setNewPassword = async (req, res, Model) => {
-    const errors = validationResult(req);
-
     try {
+        const errors = validationResult(req);
+
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
-        } else {
-            const { id, newPassword, passwordToken } = req.body;
-
-            let user = await Model.findOne({
-                resetToken: passwordToken,
-                _id: id,
-            });
-
-            if (user.resetTokenExpiration < new Date()) {
-                res.status(400).json({ error: "Reset Token Expired." });
-            } else {
-
-                const hashedPassword = await argon2.hash(newPassword),
-                    access = await AuthFunctions.generateAuthToken(id),
-                    refresh = await AuthFunctions.generateRefreshToken(id);
-
-                user.password = hashedPassword;
-                user.resetToken = undefined;
-                user.resetTokenExpiration = undefined;
-
-                await user.save();
-
-                res.status(200).json({
-                    message: "Password Reset Successful",
-                    tokens: {
-                        access: {
-                            token: access,
-                            expiresIn: "5m",
-                        },
-                        refresh: {
-                            token: refresh,
-                            expiresIn: "7d"
-                        }
-                    },
-                });
-            }
         }
+
+        const { id, newPassword, passwordToken } = req.body;
+
+        let user = await Model.findOne({
+            resetToken: passwordToken,
+            _id: id,
+        });
+
+        if (user.resetTokenExpiration < new Date()) {
+            return res.status(400).json({ error: "Reset Token Expired." });
+        }
+
+        const hashedPassword = await argon2.hash(newPassword),
+            access = await AuthFunctions.generateAuthToken(id),
+            refresh = await AuthFunctions.generateRefreshToken(id);
+
+        user.password = hashedPassword;
+        user.resetToken = undefined;
+        user.resetTokenExpiration = undefined;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Password Reset Successful",
+            tokens: {
+                access: {
+                    token: access,
+                    expiresIn: "5m",
+                },
+                refresh: {
+                    token: refresh,
+                    expiresIn: "7d"
+                }
+            },
+        });
     } catch (error) {
         res.status(400).json({ error: "Password Reset Failed" });
     }
 }
 
 const sendConfirmationMail = async (req, res, Model, userType, sendType) => {
-    crypto.randomBytes(32, async (err, buffer) => {
-        const token = buffer.toString("hex"),
-            errors = validationResult(req),
+    try {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                errors: await GeneralFunctions.validationErrorCheck(errors)
+            });
+        }
+
+        let user = await Model.findById(id);
+
+        if (!user.email) {
+            return res.status(400).json({ error: "E-Mail Address not Registered" });
+        }
+
+        const token = await crypto.randomBytes(16).toString("hex"),
             id = req.body.id;
 
         let name = "", address = "";
 
-        try {
-            if (!errors.isEmpty()) {
-                res.status(400).json({
-                    errors: await GeneralFunctions.validationErrorCheck(errors)
-                });
-            }
+        user.confirmationToken = token;
+        user.confirmationTokenExpiration = Date.now() + 3600000;
 
-            let user = await Model.findById(id);
+        await user.save();
 
-            if (!user.email) {
-                res.status(400).json({ error: "E-Mail Address not Registered" });
-            }
+        if (userType == "Admin") { name = user.username; }
+        if (userType == "Regular User") {
+            name = user.firstname;
+        }
+        if (userType == "Service Provider" || "Business User") { name = user.companyName; }
 
-            user.confirmationToken = token;
-            user.confirmationTokenExpiration = Date.now() + 3600000;
+        address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
 
-            await user.save();
-
-            if (userType == "Admin") { name = user.username; }
-            if (userType == "Regular User") {
-                //console.log(user.firstname);
-                name = user.firstname;
-                //console.log(name);
-            }
-            if (userType == "Service Provider" || "Business User") { name = user.companyName; }
-
-            //console.log(name);
-
-            address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
-
-            let from = `Energy Direct energydirect@outlook.com`,
-                to = user.email,
-                subject = `${userType} Account Confirmation`,
-                html = `<p>Good Day ${name},</p> 
+        let from = `Energy Direct energydirect@outlook.com`,
+            to = user.email,
+            subject = `${userType} Account Confirmation`,
+            html = `<p>Good Day ${name},</p> 
               <p>Please click this <a href="${address}/auth/${sendType}/confirmMail/${token}">link</a> 
               to confirm your email.</p>`;
 
-            const data = {
-                from: from,
-                to: to,
-                subject: subject,
-                html: html,
-            };
+        const data = {
+            from: from,
+            to: to,
+            subject: subject,
+            html: html,
+        };
 
-            mailer
-                .sendEmail(data)
-                .then((success) => {
-                    res
-                        .status(200)
-                        .json({ message: "E-Mail Confirmation Link Successfully Sent" });
-                })
-                .catch((error) => {
-                    res
-                        .status(400)
-                        .json({ error: "E-Mail Confirmation Link Failed to Send" });
-                });
-        } catch (error) {
-            res.status(400).json({
-                error: "Error Generating E-Mail Confirmation Token, Please Try Again.",
-            });
-        }
-    });
+        await mailer.sendEmail(data);
+
+        res.status(200).json({
+            message: "E-Mail Confirmation Link Successfully Sent"
+        });
+    } catch (error) {
+        res.status(400).json({
+            error: "Error Generating E-Mail Confirmation Token, Please Try Again.",
+        });
+    }
 }
 
 const confirmMail = async (req, res, token, Model, userType) => {
@@ -249,7 +221,7 @@ const confirmMail = async (req, res, token, Model, userType) => {
         });
 
         if (user.confirmationTokenExpiration < new Date()) {
-            res.status(400).json({ error: "Confirmation Token Expired." });
+            return res.status(400).json({ error: "Confirmation Token Expired." });
         }
 
         user.confirmedMail = true;
