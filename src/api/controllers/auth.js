@@ -105,35 +105,37 @@ exports.adminLogin = async (req, res) => {
       });
     }
 
-    if (await argon2.verify(admin.password, req.body.password)) {
-      let refreshToken = await AuthFunctions.generateRefreshToken(admin._id),
-        accessToken = await AuthFunctions.generateAuthToken(admin._id);
-
-      admin.token = refreshToken;
-
-      await admin.save();
-
-      res.status(200).json({
-        message: "Admin Login Successful",
-        admin: {
-          _id: admin._id,
-          username: admin.username,
-          email: admin.email,
-        },
-        tokens: {
-          access: {
-            token: accessToken,
-            expiresIn: "5m",
-          },
-          refresh: {
-            token: refreshToken,
-            expiresIn: "7d"
-          }
-        },
+    if (!await argon2.verify(admin.password, req.body.password)) {
+      return res.status(400).json({
+        error: "Invalid Username or Password"
       });
-    } else {
-      res.status(400).json({ error: "Invalid Username or Password" });
     }
+
+    let refreshToken = await AuthFunctions.generateRefreshToken(admin._id),
+      accessToken = await AuthFunctions.generateAuthToken(admin._id);
+
+    admin.token = refreshToken;
+
+    await admin.save();
+
+    res.status(200).json({
+      message: "Admin Login Successful",
+      admin: {
+        _id: admin._id,
+        username: admin.username,
+        email: admin.email,
+      },
+      tokens: {
+        access: {
+          token: accessToken,
+          expiresIn: "5m",
+        },
+        refresh: {
+          token: refreshToken,
+          expiresIn: "7d"
+        }
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Login Process Failed, Please Try Again" });
   }
@@ -257,37 +259,37 @@ exports.hostLogin = async (req, res) => {
       });
     }
 
-    if (await argon2.verify(host.password, password)) {
-      let refreshToken = await AuthFunctions.generateRefreshToken(host._id),
-        accessToken = await AuthFunctions.generateAuthToken(host._id);
-
-      host.token = refreshToken;
-
-      await host.save();
-
-      res.status(200).json({
-        message: "Host Login Successful",
-        host: {
-          _id: host._id,
-          name: host.brandName,
-          email: host.brandEmail,
-        },
-        tokens: {
-          access: {
-            token: accessToken,
-            expiresIn: "5m",
-          },
-          refresh: {
-            token: refreshToken,
-            expiresIn: "7d"
-          }
-        },
-      });
-    } else {
-      res.status(400).json({
+    if (!await argon2.verify(host.password, password)) {
+      return res.status(400).json({
         error: "Invalid Email or Password"
       });
     }
+
+    let refreshToken = await AuthFunctions.generateRefreshToken(host._id),
+      accessToken = await AuthFunctions.generateAuthToken(host._id);
+
+    host.token = refreshToken;
+
+    await host.save();
+
+    res.status(200).json({
+      message: "Host Login Successful",
+      host: {
+        _id: host._id,
+        name: host.brandName,
+        email: host.brandEmail,
+      },
+      tokens: {
+        access: {
+          token: accessToken,
+          expiresIn: "5m",
+        },
+        refresh: {
+          token: refreshToken,
+          expiresIn: "7d"
+        }
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Login Process Failed, Please Try Again" });
   }
@@ -320,11 +322,129 @@ exports.hostConfirmMail = async (req, res) => {
 
 
 exports.userRegister = (req, res) => {
+  try {
+    const errors = validationResult(req);
 
+    const { username, firstname, lastname, email, password } = req.body;
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    }
+
+    let user = await Host.findOne({
+      $or: [{ username: username },
+      { email: email }]
+    });
+
+    if (user) {
+      return res.status(400).json({
+        error: "User already registered",
+      });
+    }
+
+    const hashedPassword = await argon2.hash(password),
+      id = mongoose.Types.ObjectId(),
+      access = await AuthFunctions.generateAuthToken(id),
+      refresh = await AuthFunctions.generateRefreshToken(id);
+
+    const newUser = new User({
+      _id: id,
+      username: username,
+      firstname: firstname,
+      lastname: lastname,
+      email: email,
+      password: hashedPassword,
+      bookedEvents: [],
+      payments: [],
+      ratedEvents: []
+    });
+
+    const savedObject = await newUser.save();
+
+    res.status(201).json({
+      message: "User successfully registered.",
+      user: {
+        _id: savedObject._id,
+        firstname: savedObject.firstname,
+        lastname: savedObject.lastname,
+        email: savedObject.email,
+      },
+      tokens: {
+        access: {
+          token: access,
+          expiresIn: "5m",
+        },
+        refresh: {
+          token: refresh,
+          expiresIn: "7d"
+        }
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: "User could not be registered, please try again.",
+    });
+  }
 };
 
 exports.userLogin = async (req, res) => {
+  try {
+    const errors = validationResult(req);
 
+    const { username, password } = req.body;
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    }
+
+    let user = await User.findOne({
+      username: username,
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        error: "Invalid Email or Password"
+      });
+    }
+
+    if (!await argon2.verify(host.password, password)) {
+      return res.status(400).json({
+        error: "Invalid Email or Password"
+      });
+    }
+
+    let refreshToken = await AuthFunctions.generateRefreshToken(host._id),
+      accessToken = await AuthFunctions.generateAuthToken(host._id);
+
+    user.token = refreshToken;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "User Login Successful",
+      user: {
+        _id: user._id,
+        name: `${user.firstname} ${user.lastname}`,
+        email: user.email,
+      },
+      tokens: {
+        access: {
+          token: accessToken,
+          expiresIn: "5m",
+        },
+        refresh: {
+          token: refreshToken,
+          expiresIn: "7d"
+        }
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Login Process Failed, Please Try Again" });
+  }
 };
 
 exports.userLogout = async (req, res) => {

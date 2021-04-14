@@ -5,12 +5,12 @@ const { Event } = require("../models/event"),
   { validationResult } = require("express-validator");
 
 exports.addEvent = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req);
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
     }
@@ -23,27 +23,10 @@ exports.addEvent = async (req, res) => {
     let event = await Event.findOne({ title: title, host: req.host._id });
 
     if (event) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "Event already added",
       });
     }
-
-    // const savedObject = await new Event({
-    //     _id: mongoose.Types.ObjectId(),
-    //     title: title,
-    //     poster: poster,
-    //     isPublic: public,
-    //     isVirtual: virtual,
-    //     category: category,
-    //     keywords: keywords,
-    //     description: description,
-    //     location: location,
-    //     tickets: tickets,
-    //     minimumAgeGroup: minAge,
-    //     dates: dates 
-    // }).save();
-
-    // await Host.findById(req.host._id).events.push(savedObject._id).save();
 
     event = new Event({
       _id: mongoose.Types.ObjectId(),
@@ -81,13 +64,13 @@ exports.addEvent = async (req, res) => {
 }
 
 exports.editEvent = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req),
-    id = req.params.eventId;
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req),
+      id = req.params.eventId;
+
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
     }
@@ -126,38 +109,36 @@ exports.editEvent = async (req, res) => {
 }
 
 exports.deleteEvent = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req),
-    id = req.params.eventId;
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req),
+      id = req.params.eventId;
+
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } else {
-
-      let event = await Event.findById(id);
-
-      if (event.host != req.user._id) {
-        res.status(400).json({
-          error: "This User cannot delete this event",
-        });
-      } else {
-
-        let host = await Host.findById(req.host._id);
-
-        host.vehicles.pull(vehicleId);
-
-        await host.save();
-
-        await Event.findByIdAndDelete(id);
-
-        res.status(200).json({
-          message: "Event Deleted Successfully",
-        });
-      }
     }
+
+    let event = await Event.findById(id);
+
+    if (event.host != req.user._id) {
+      return res.status(400).json({
+        error: "This User cannot delete this event",
+      });
+    }
+
+    let host = await Host.findById(req.host._id);
+
+    host.vehicles.pull(vehicleId);
+
+    await host.save();
+
+    await Event.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Event Deleted Successfully",
+    });
   } catch (error) {
     res.status(400).json({ error: "Event Failed to Delete" });
   }
@@ -168,21 +149,22 @@ exports.verifyTicketPayment = async (req, res) => {
 }
 
 exports.viewRegisteredUsers = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const id = req.params.eventId,
-    errors = validationResult(req);
-
   try {
+    res.setHeader('access-token', req.token);
+    const id = req.params.eventId,
+      errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } else {
-      const users = await Event.findById(id)
-        .select('users').populate('users.id', 'username firstname lastname email');
-
-      res.status(200).json({ registeredUsers: users });
     }
+
+    const users = await Event.findById(id)
+      .select('users').populate('users.id', 'username firstname lastname email');
+
+    res.status(200).json({ registeredUsers: users });
+
   } catch (error) {
     res.status(400).json({
       error: "Error Fetching User's Events, please try again.",
@@ -191,20 +173,20 @@ exports.viewRegisteredUsers = async (req, res) => {
 }
 
 exports.viewEvent = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const id = req.params.eventId,
-    errors = validationResult(req);
-
   try {
+    res.setHeader('access-token', req.token);
+    const id = req.params.eventId,
+      errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } else {
-      const event = await Event.findById(id);
-
-      res.status(200).json({ event: event });
     }
+
+    const event = await Event.findById(id);
+
+    res.status(200).json({ event: event });
   } catch (error) {
     res.status(400).json({
       error: "Error Fetching Event Details, please try again.",

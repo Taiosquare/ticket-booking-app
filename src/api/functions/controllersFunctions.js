@@ -59,8 +59,8 @@ const sendResetPasswordLink = async (req, res, email, Model, userType, sendType)
         user.save();
 
         if (userType == "Admin") { name = user.username; }
-        if (userType == "Regular User") { name = user.firstname; }
-        if (userType == "Service Provider" || "Business User") { name = user.companyName; }
+        if (userType == "Host") { name = user.brandName; }
+        if (userType == "User") { name = user.firstname }
 
         address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
 
@@ -167,7 +167,9 @@ const sendConfirmationMail = async (req, res, Model, userType, sendType) => {
         let user = await Model.findById(id);
 
         if (!user.email) {
-            return res.status(400).json({ error: "E-Mail Address not Registered" });
+            return res.status(400).json({
+                error: "E-Mail Address not Registered"
+            });
         }
 
         const token = await crypto.randomBytes(16).toString("hex"),
@@ -181,10 +183,8 @@ const sendConfirmationMail = async (req, res, Model, userType, sendType) => {
         await user.save();
 
         if (userType == "Admin") { name = user.username; }
-        if (userType == "Regular User") {
-            name = user.firstname;
-        }
-        if (userType == "Service Provider" || "Business User") { name = user.companyName; }
+        if (userType == "Host") { name = user.brandName; }
+        if (userType == "User") { name = user.firstname }
 
         address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
 

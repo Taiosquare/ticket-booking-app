@@ -25,6 +25,12 @@ const validationErrorCheck = async (errors) => {
   return errs;
 }
 
+const returnValidationError = (res, errors) => {
+  return res.status(400).json({
+    errors: await validationErrorCheck(errors)
+  });
+}
+
 const hostSavePayment = async (event) => {
   let event = await Event.find({ transferCode: event.data.transfer_code });
 
@@ -107,6 +113,7 @@ const createRecepientCode = async (name, accountNumber, bankName) => {
 
 module.exports.environmentCheck = environmentCheck;
 module.exports.validationErrorCheck = validationErrorCheck;
+module.exports.returnValidationError = returnValidationError;
 module.exports.hostSavePayment = hostSavePayment;
 module.exports.userSavePayment = userSavePayment;
 module.exports.createRecepientCode = createRecepientCode;

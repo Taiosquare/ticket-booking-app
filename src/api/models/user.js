@@ -87,10 +87,10 @@ const UserSchema = new Schema(
       //required: true,
     },
 
-    profileId: {
-      type: String,
-      //required: true,
-    },
+    // profileId: {
+    //   type: String,
+    //   //required: true,
+    // },
 
     verifiedMail: {
       type: Boolean,

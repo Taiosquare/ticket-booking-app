@@ -6,37 +6,41 @@ const { Admin } = require("../models/admin"),
     AuthFunctions = require("../functions/authFunctions");
 
 const user = async (req, res, next, userType, Model) => {
-    const authHeader = req.get("Authorization");
-
     try {
+        const authHeader = req.get("Authorization");
+
         if (!authHeader) {
-            res.status(400).json({ error: "No Authentication Header" });
-        } else {
-            const token = authHeader.split(" ")[1];
-            let decodedToken;
-            let refresh = req.headers['refresh-token'];
+            return res.status(400).json({
+                error: "No Authentication Header"
+            });
+        }
 
-            decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, userType);
+        const token = authHeader.split(" ")[1];
+        let decodedToken;
+        let refresh = req.headers['refresh-token'];
 
-            if (decodedToken.error) {
-                res.status(400).json({ error: decodedToken.error });
-            } else if (decodedToken.state == "expired") {
-                res.status(400).json({ error: "Token Expired, Login" });
-            } else if (decodedToken.state == "active") {
-                try {
-                    const user = await Model.findById(decodedToken.token._id);
+        decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, userType);
 
-                    if (user.token == undefined) {
-                        res.status(400).json({ error: `Unauthenticated ${userType}, Login` });
-                    } else {
-                        req.user = user;
-                        req.token = decodedToken.newToken;
+        if (decodedToken.error) {
+            res.status(400).json({ error: decodedToken.error });
+        } else if (decodedToken.state == "expired") {
+            res.status(400).json({ error: "Token Expired, Login" });
+        } else if (decodedToken.state == "active") {
+            try {
+                const user = await Model.findById(decodedToken.token._id);
 
-                        next();
-                    }
-                } catch (error) {
-                    res.status(404).json({ error: `${userType} not Found` });
+                if (user.token == undefined) {
+                    return res.status(400).json({
+                        error: `Unauthenticated ${userType}, Login`
+                    });
                 }
+
+                req.user = user;
+                req.token = decodedToken.newToken;
+
+                next();
+            } catch (error) {
+                res.status(404).json({ error: `${userType} not Found` });
             }
         }
     } catch (error) {

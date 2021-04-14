@@ -33,47 +33,47 @@ const generateTickets = async (event, numOfTickets, reference) => {
 }
 
 const bankPayment = async (req, res, eventId) => {
-    const errors = validationResult(req);
-    res.setHeader('access-token', req.token);
-
     try {
+        const errors = validationResult(req);
+        res.setHeader('access-token', req.token);
+
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
-        } else {
-            const { email, bank, birthday, numOfTickets } = req.body;
+        }
 
-            let event = await Event.findById(eventId);
+        const { email, bank, birthday, numOfTickets } = req.body;
 
-            const params = {
-                email: email,
-                amount: event.tickets.price * numOfTickets,
-                bank: bank,
-                birthday: birthday
-            };
+        let event = await Event.findById(eventId);
 
-            let response = await fetch(`https://api.paystack.co/charge`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params),
+        const params = {
+            email: email,
+            amount: event.tickets.price * numOfTickets,
+            bank: bank,
+            birthday: birthday
+        };
+
+        let response = await fetch(`https://api.paystack.co/charge`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params),
+        });
+
+        let response2 = await response.json();
+
+        if (response2.status == true) {
+            res.status(200).json({
+                message: 'Tickets Payment have successfully been initiated, awaiting verification from user',
+                reference: response2.data.reference
             });
-
-            let response2 = await response.json();
-
-            if (response2.status == true) {
-                res.status(200).json({
-                    message: 'Tickets Payment have successfully been initiated, awaiting verification from user',
-                    reference: response2.data.reference
-                });
-            } else {
-                res.status(400).json({
-                    error: 'Error: The Payment could not be initiated, please try again.',
-                });
-            }
+        } else {
+            res.status(400).json({
+                error: 'Error: The Payment could not be initiated, please try again.',
+            });
         }
     } catch (error) {
         res.status(400).json({
@@ -83,55 +83,55 @@ const bankPayment = async (req, res, eventId) => {
 }
 
 const bankPaymentVerification = async (req, res, eventId) => {
-    const errors = validationResult(req);
-    res.setHeader('access-token', req.token);
-
     try {
+        const errors = validationResult(req);
+        res.setHeader('access-token', req.token);
+
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
+        }
+
+        const { otp, reference, numOfTickets } = req.body;
+
+        let event = await Event.findById(eventId);
+
+        const params = {
+            otp: otp,
+            reference: reference
+        }
+
+        await fetch(`https://api.paystack.co/charge/submit_otp`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params),
+        });
+
+        let response = await fetch(`https://api.paystack.co/charge/submit_otp`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params),
+        });
+
+        let response2 = await response.json();
+
+        if (response2.status == true) {
+            await generateTickets(event, numOfTickets, reference);
+
+            res.status(200).json({
+                message: 'Payment has successfully been verified.',
+            });
         } else {
-            const { otp, reference, numOfTickets } = req.body;
-
-            let event = await Event.findById(eventId);
-
-            const params = {
-                otp: otp,
-                reference: reference
-            }
-
-            await fetch(`https://api.paystack.co/charge/submit_otp`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params),
+            res.status(400).json({
+                error: 'Error: The Payment could not be verified, please try again.',
             });
-
-            let response = await fetch(`https://api.paystack.co/charge/submit_otp`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params),
-            });
-
-            let response2 = await response.json();
-
-            if (response2.status == true) {
-                await generateTickets(event, numOfTickets, reference);
-
-                res.status(200).json({
-                    message: 'Payment has successfully been verified.',
-                });
-            } else {
-                res.status(400).json({
-                    error: 'Error: The Payment could not be verified, please try again.',
-                });
-            }
         }
     } catch (error) {
         res.status(400).json({
@@ -141,50 +141,50 @@ const bankPaymentVerification = async (req, res, eventId) => {
 }
 
 const ussdPayment = async (req, res, eventId) => {
-    const errors = validationResult(req);
-    res.setHeader('access-token', req.token);
-
     try {
+        const errors = validationResult(req);
+        res.setHeader('access-token', req.token);
+
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
-        } else {
-            const { email, ussd, numOfTickets } = req.body;
+        }
 
-            let event = await Event.findById(eventId);
+        const { email, ussd, numOfTickets } = req.body;
 
-            const params = {
-                email: email,
-                amount: event.tickets.price * numOfTickets,
-                ussd: {
-                    type: ussd.type,
-                }
-            };
+        let event = await Event.findById(eventId);
 
-            let response = await fetch(`https://api.paystack.co/charge`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params),
-            });
-
-            let response2 = await response.json();
-
-            if (response2.status == true) {
-                res.status(200).json({
-                    message: 'Payment has successfully been initiated, awaiting verification from user',
-                    reference: response2.data.reference,
-                    displayText: response2.data.display_text,
-                    ussd: response2.data.ussd_code
-                });
-            } else {
-                res.status(400).json({
-                    error: 'Error: The Payment could not be initiated, please try again.',
-                });
+        const params = {
+            email: email,
+            amount: event.tickets.price * numOfTickets,
+            ussd: {
+                type: ussd.type,
             }
+        };
+
+        let response = await fetch(`https://api.paystack.co/charge`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params),
+        });
+
+        let response2 = await response.json();
+
+        if (response2.status == true) {
+            res.status(200).json({
+                message: 'Payment has successfully been initiated, awaiting verification from user',
+                reference: response2.data.reference,
+                displayText: response2.data.display_text,
+                ussd: response2.data.ussd_code
+            });
+        } else {
+            res.status(400).json({
+                error: 'Error: The Payment could not be initiated, please try again.',
+            });
         }
     } catch (error) {
         res.status(400).json({
@@ -194,55 +194,55 @@ const ussdPayment = async (req, res, eventId) => {
 }
 
 const ussdPaymentVerification = async (req, res, eventId) => {
-    const errors = validationResult(req);
-    res.setHeader('access-token', req.token);
-
     try {
+        const errors = validationResult(req);
+        res.setHeader('access-token', req.token);
+
         if (!errors.isEmpty()) {
-            res.status(400).json({
+            return res.status(400).json({
                 errors: await GeneralFunctions.validationErrorCheck(errors)
             });
+        }
+
+        const { pin, reference, numOfTickets } = req.body;
+
+        let event = await Event.findById(eventId);
+
+        const params = {
+            pin: pin,
+            reference: reference
+        }
+
+        await fetch(`https://api.paystack.co/charge/submit_pin`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params),
+        });
+
+        let response = await fetch(`https://api.paystack.co/charge/submit_pin`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params),
+        });
+
+        let response2 = await response.json();
+
+        if (response2.status == true) {
+            await generateTickets(event, numOfTickets, reference);
+
+            res.status(200).json({
+                message: 'Payment has successfully been verified.',
+            });
         } else {
-            const { pin, reference, numOfTickets } = req.body;
-
-            let event = await Event.findById(eventId);
-
-            const params = {
-                pin: pin,
-                reference: reference
-            }
-
-            await fetch(`https://api.paystack.co/charge/submit_pin`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params),
+            res.status(400).json({
+                error: 'Error: The Payment could not be verified, please try again.',
             });
-
-            let response = await fetch(`https://api.paystack.co/charge/submit_pin`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(params),
-            });
-
-            let response2 = await response.json();
-
-            if (response2.status == true) {
-                await generateTickets(event, numOfTickets, reference);
-
-                res.status(200).json({
-                    message: 'Payment has successfully been verified.',
-                });
-            } else {
-                res.status(400).json({
-                    error: 'Error: The Payment could not be verified, please try again.',
-                });
-            }
         }
     } catch (error) {
         res.status(400).json({

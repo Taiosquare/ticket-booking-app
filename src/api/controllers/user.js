@@ -7,31 +7,31 @@ const { Event } = require("../models/event"),
   { validationResult } = require("express-validator");
 
 exports.searchEvents = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req);
-
   // Search Criterias: title, category, isVirtual, isPublic, location, dates
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } else {
-      const keyword = req.body.keyword || "";
-
-      const events = await Event.find(
-        { $text: { $search: keyword } },
-        { score: { $meta: "textScore" } }
-      )
-        .sort({ score: { $meta: "textScore" } })
-        .select("title category location dates")
-
-      //events == null ? events = :
-      res.status(200).json({
-        events: events
-      });
     }
+
+    const keyword = req.body.keyword || "";
+
+    const events = await Event.find(
+      { $text: { $search: keyword } },
+      { score: { $meta: "textScore" } }
+    )
+      .sort({ score: { $meta: "textScore" } })
+      .select("title category location dates")
+
+    //events == null ? events = :
+
+    res.status(200).json({
+      events: events
+    });
   } catch (error) {
     res.status(400).json({
       error: "error Fetching Events",
@@ -45,40 +45,40 @@ exports.rateEvent = async (req, res) => {
 
   try {
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } else {
-      const id = req.params.eventId,
-        rating = req.body.rating;
-
-      await User.updateOne(
-        { _id: req.user._id },
-        {
-          $set: {
-            "ratedEvents.id": id,
-            "ratedEvents.rating": rating
-          }
-        }
-      );
-
-      let event = await Event.findById(id);
-
-      // let user = await User.findById(req.user._id);
-
-      event.rating.numofRatings++;
-      event.rating.averageScore = (event.rating.averageScore + rating) / event.rating.numofRatings;
-
-      // user.ratedEvents.id = id;
-      // user.ratedEvents.rating = rating;
-
-      await event.save();
-      // await user.save();
-
-      res.status(200).json({
-        message: 'Event successfully rated'
-      });
     }
+
+    const id = req.params.eventId,
+      rating = req.body.rating;
+
+    await User.updateOne(
+      { _id: req.user._id },
+      {
+        $set: {
+          "ratedEvents.id": id,
+          "ratedEvents.rating": rating
+        }
+      }
+    );
+
+    let event = await Event.findById(id);
+
+    // let user = await User.findById(req.user._id);
+
+    event.rating.numofRatings++;
+    event.rating.averageScore = (event.rating.averageScore + rating) / event.rating.numofRatings;
+
+    // user.ratedEvents.id = id;
+    // user.ratedEvents.rating = rating;
+
+    await event.save();
+    // await user.save();
+
+    res.status(200).json({
+      message: 'Event successfully rated'
+    });
   } catch (error) {
     res.status(400).json({
       error: "Error Rating Event, please try again.",
@@ -91,48 +91,46 @@ exports.bookEvent = async (req, res) => {
   // use event details for initiating payment
   // 2nd request should be eventBankPaymentVerification
   // The details should then be saved there
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req);
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
-    } else {
-
-      const { eventId, userId, spacesBooked, payment: { email, amount, bank, birthday } } = req.body;
-
-      let user = await User.findById(userId);
-
-      if (!user) {
-        res.status(400).json({
-          error: "Non-Existent User",
-        });
-      } else {
-
-        //add user to events users during payment
-        let event = await Event.updateOne(
-          { _id: eventId },
-          {
-            $set: { $subtract: ["$availableSpace", spacesBooked] },
-          }
-        );
-
-        user.bookedEvents.push({
-          _id: eventId,
-          spaceReserved: spacesBooked
-        });
-
-        await user.save();
-
-        res.status(201).json({
-          message: "Event successfully booked. Your booking will expire if you don't pay within 24 hours.",
-          spacesBooked: spacesBooked,
-          ticketPrice: event.tickets.price
-        });
-      }
     }
+
+    const { eventId, userId, spacesBooked, payment: { email, amount, bank, birthday } } = req.body;
+
+    let user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(400).json({
+        error: "Non-Existent User",
+      });
+    }
+
+    //add user to events users during payment
+    let event = await Event.updateOne(
+      { _id: eventId },
+      {
+        $set: { $subtract: ["$availableSpace", spacesBooked] },
+      }
+    );
+
+    user.bookedEvents.push({
+      _id: eventId,
+      spaceReserved: spacesBooked
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      message: "Event successfully booked. Your booking will expire if you don't pay within 24 hours.",
+      spacesBooked: spacesBooked,
+      ticketPrice: event.tickets.price
+    });
   } catch (error) {
     res.status(400).json({
       error: "Error Booking Event, please try again.",
