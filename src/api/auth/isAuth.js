@@ -5,7 +5,7 @@ const { Admin } = require("../models/admin"),
     { User } = require("../models/user"),
     AuthFunctions = require("../functions/authFunctions");
 
-const user = async (req, res, next, userType, Model) => {
+const userFunc = async (req, res, next, userType, Model) => {
     try {
         const authHeader = req.get("Authorization");
 
@@ -19,7 +19,7 @@ const user = async (req, res, next, userType, Model) => {
         let decodedToken;
         let refresh = req.headers['refresh-token'];
 
-        decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh, userType);
+        decodedToken = await AuthFunctions.decodeToken(token, process.env.ACCESS_SECRET, refresh);
 
         if (decodedToken.error) {
             res.status(400).json({ error: decodedToken.error });
@@ -49,15 +49,15 @@ const user = async (req, res, next, userType, Model) => {
 }
 
 const admin = async (req, res, next) => {
-    user(req, res, next, "admin", Admin);
+    userFunc(req, res, next, "admin", Admin);
 };
 
 const host = async (req, res, next) => {
-    user(req, res, next, "host", Host);
+    userFunc(req, res, next, "host", Host);
 };
 
 const user = async (req, res, next) => {
-    user(req, res, next, "user", User);
+    userFunc(req, res, next, "user", User);
 };
 
 module.exports.admin = admin;

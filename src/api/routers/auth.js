@@ -1,83 +1,29 @@
 const express = require("express"),
   router = express.Router(),
   authController = require("../controllers/auth"),
-  { body, param } = require("express-validator"),
   passportFacebook = require('../auth/facebook'),
   authenticate = require("../auth/isAuth");
 
-// Admin Auth 
 router
-  .route("/admin/login")
-    .post(authController.adminLogin);
-  
-router.route("/admin/logout")
+  .route("/register")
+  .post(authController.register);
+
+router
+  .route("/login")
+  .post(authController.login);
+
+router.route("/logout")
   .post(
     authenticate.admin,
     authController.adminLogout
-);
-
-router
-  .route("/admin/recover")
-  .patch(
-    authController.adminSendResetPasswordLink
   );
 
-router.route("/admin/reset/:token").get(authController.adminResetPassword);
-
-router
-  .route("/admin/newPassword")
-  .patch(
-    authController.adminSetNewPassword
-  );
-
-router.route("/admin/confirm")
-  .post(
-    authController.adminSendConfirmationMail
-  );
-
-router.route("/admin/confirm/:token").get(authController.adminConfirmMail);
-
-
-
-// Host Auth 
-router
-  .route("/host/login")
-    .post(authController.hostLogin);
-  
 router.route("/host/logout")
   .post(
     authenticate.host,
     authController.hostLogout
-);
-
-router
-  .route("/host/recover")
-  .patch(
-    authController.hostSendResetPasswordLink
   );
 
-router.route("/host/reset/:token").get(authController.hostResetPassword);
-
-router
-  .route("/host/newPassword")
-  .patch(
-    authController.hostSetNewPassword
-  );
-
-router.route("/host/confirm")
-  .post(
-    authController.hostSendConfirmationMail
-  );
-
-router.route("/host/confirm/:token").get(authController.hostConfirmMail);
-
-
-
-// User Auth
-router
-  .route("/user/login")
-  .post(authController.userLogin);
-  
 router.route("/user/logout")
   .post(
     authenticate.user,
@@ -85,25 +31,20 @@ router.route("/user/logout")
   );
 
 router
-  .route("/user/recover")
-  .patch(
-    authController.userSendResetPasswordLink
+  .route("/recover")
+  .post(
+    authController.sendResetPasswordLink
   );
 
-router.route("/user/reset/:token").get(authController.userResetPassword);
+router.route("/reset/:token").get(authController.resetPassword);
 
 router
-  .route("/user/newPassword")
+  .route("/newPassword")
   .patch(
-    authController.userSetNewPassword
+    authController.setNewPassword
   );
 
-router.route("/user/confirm")
-  .post(
-    authController.userSendConfirmationMail
-  );
-
-router.route("/user/confirm/:token").get(authController.userConfirmMail);
+router.route("/confirm/:token").get(authController.confirmMail);
 
 router.route("/user/facebook")
   .get(

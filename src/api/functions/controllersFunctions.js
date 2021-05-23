@@ -4,8 +4,7 @@ const mongoose = require("mongoose"),
     mailer = require("../../services/mailer"),
     { validationResult } = require("express-validator"),
     AuthFunctions = require("./authFunctions"),
-    GeneralFunctions = require("./generalFunctions"),
-    fetch = require("node-fetch");
+    GeneralFunctions = require("./generalFunctions");
 
 const logout = async (req, res, id, Model, userType) => {
     try {
@@ -154,66 +153,6 @@ const setNewPassword = async (req, res, Model) => {
     }
 }
 
-const sendConfirmationMail = async (req, res, Model, userType, sendType) => {
-    try {
-        const errors = validationResult(req);
-
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                errors: await GeneralFunctions.validationErrorCheck(errors)
-            });
-        }
-
-        let user = await Model.findById(id);
-
-        if (!user.email) {
-            return res.status(400).json({
-                error: "E-Mail Address not Registered"
-            });
-        }
-
-        const token = await crypto.randomBytes(16).toString("hex"),
-            id = req.body.id;
-
-        let name = "", address = "";
-
-        user.confirmationToken = token;
-        user.confirmationTokenExpiration = Date.now() + 3600000;
-
-        await user.save();
-
-        if (userType == "Admin") { name = user.username; }
-        if (userType == "Host") { name = user.brandName; }
-        if (userType == "User") { name = user.firstname }
-
-        address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
-
-        let from = `Energy Direct energydirect@outlook.com`,
-            to = user.email,
-            subject = `${userType} Account Confirmation`,
-            html = `<p>Good Day ${name},</p> 
-              <p>Please click this <a href="${address}/auth/${sendType}/confirmMail/${token}">link</a> 
-              to confirm your email.</p>`;
-
-        const data = {
-            from: from,
-            to: to,
-            subject: subject,
-            html: html,
-        };
-
-        await mailer.sendEmail(data);
-
-        res.status(200).json({
-            message: "E-Mail Confirmation Link Successfully Sent"
-        });
-    } catch (error) {
-        res.status(400).json({
-            error: "Error Generating E-Mail Confirmation Token, Please Try Again.",
-        });
-    }
-}
-
 const confirmMail = async (req, res, token, Model, userType) => {
     try {
         let user = await Model.findOne({
@@ -245,5 +184,4 @@ module.exports.logout = logout;
 module.exports.sendResetPasswordLink = sendResetPasswordLink;
 module.exports.resetPassword = resetPassword;
 module.exports.setNewPassword = setNewPassword;
-module.exports.sendConfirmationMail = sendConfirmationMail;
 module.exports.confirmMail = confirmMail;

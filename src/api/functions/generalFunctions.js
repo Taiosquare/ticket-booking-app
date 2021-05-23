@@ -3,7 +3,9 @@ require("dotenv").config();
 const { User } = require("../models/user"),
   { Account } = require("../models/account"),
   { Event } = require("../models/event"),
-  { Ticket } = require("../models/ticket");
+  { Ticket } = require("../models/ticket"),
+  mailer = require("../../services/mailer"),
+  crypto = require("crypto");
 
 const environmentCheck = async (env) => {
   let address = "";
@@ -25,16 +27,38 @@ const validationErrorCheck = async (errors) => {
   return errs;
 }
 
-const returnValidationError = (res, errors) => {
+const returnValidationError = async (res, errors) => {
   return res.status(400).json({
     errors: await validationErrorCheck(errors)
   });
 }
 
-const hostSavePayment = async (event) => {
-  let event = await Event.find({ transferCode: event.data.transfer_code });
+const sendConfirmationMail = async (email, userType, sendType, name, baseURL) => {
+  const token = await crypto.randomBytes(16).toString("hex");
 
-  let account = await Account.findOne({ host: event.host }),
+  const link = `${baseURL}/auth/${sendType}?verify=${token}`;
+
+  let from = `Energy Direct energydirect@outlook.com`,
+    to = email,
+    subject = `${userType} Account Confirmation`,
+    html = `<p>Good Day ${name},</p> 
+              <p>Please click this <a href=${link}>link</a> 
+              to confirm your email.</p>`;
+
+  const data = {
+    from: from,
+    to: to,
+    subject: subject,
+    html: html,
+  };
+
+  await mailer.sendEmail(data);
+}
+
+const hostSavePayment = async (event) => {
+  let event2 = await Event.find({ transferCode: event.data.transfer_code });
+
+  let account = await Account.findOne({ host: event2.host }),
     payment = {};
 
   payment.reference = event.data.reference;
@@ -114,6 +138,7 @@ const createRecepientCode = async (name, accountNumber, bankName) => {
 module.exports.environmentCheck = environmentCheck;
 module.exports.validationErrorCheck = validationErrorCheck;
 module.exports.returnValidationError = returnValidationError;
+module.exports.sendConfirmationMail = sendConfirmationMail;
 module.exports.hostSavePayment = hostSavePayment;
 module.exports.userSavePayment = userSavePayment;
 module.exports.createRecepientCode = createRecepientCode;
