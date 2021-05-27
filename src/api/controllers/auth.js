@@ -76,5 +76,15 @@ exports.confirmMail = async (req, res) => {
   }
 };
 
+exports.resendConfirmationMail = async (req, res) => {
+  if (req.body.type == "admin") {
+    ControllersFunctions.resendConfirmationMail(req, res, req.body.id, Admin, "Admin", "admin");
+  } else if (req.body.type == "host") {
+    ControllersFunctions.resendConfirmationMail(req, res, req.body.id, Host, "Host", "host");
+  } else if (req.body.type == "user") {
+    ControllersFunctions.resendConfirmationMail(req, res, req.body.id, User, "User", "user");
+  }
+}
+
 
 

@@ -60,7 +60,7 @@ const DateSchema = new Schema({
   },
 
   days: {
-    type: [Number]
+    type: Number
   },
 
   //   times: {
@@ -80,10 +80,10 @@ const DateRangeSchema = new Schema({
 });
 
 const TicketsSchema = new Schema({
-  type: {
-    type: String,
-    required: true,
-  },
+  // type: {
+  //   type: String,
+  //   required: true,
+  // },
 
   datesAvailable: {
     type: DateRangeSchema,
@@ -105,13 +105,13 @@ const TicketsSchema = new Schema({
     required: true,
   },
 
-  additionalInfo: {
-    type: String,
-  },
+  // additionalInfo: {
+  //   type: String,
+  // },
 
-  items: {
-    type: [String]
-  }
+  // items: {
+  //   type: [String]
+  // }
 });
 
 // const PerksSchema = new Schema({
@@ -181,23 +181,13 @@ const EventSchema = new Schema(
       required: true
     },
 
-    minimumAgeGroup: {
-      type: String,
+    minimumAge: {
+      type: Number,
     },
 
     availableSpace: {
       type: Number,
     },
-
-    // transferrable: {
-    //     type: Boolean,
-    //     default: true
-    // },
-
-    // refundable: {
-    //     type: Boolean,
-    //     default: true
-    // },
 
     dates: {
       type: DateSchema,
@@ -212,15 +202,6 @@ const EventSchema = new Schema(
         type: Number
       }
     },
-
-    // refundPolicies: {
-    //     type: [String],
-    // },
-
-    // views: {
-    //     type: Array,
-    //     default: []
-    // },
 
     host: {
       type: Schema.Types.ObjectId,

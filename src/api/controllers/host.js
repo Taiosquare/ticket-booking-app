@@ -20,7 +20,7 @@ exports.addEvent = async (req, res) => {
       keywords, description, location, tickets, minAge, dates
     } = req.body;
 
-    let event = await Event.findOne({ title: title, host: req.host._id });
+    let event = await Event.findOne({ title: title, host: req.user._id });
 
     if (event) {
       return res.status(400).json({
@@ -28,7 +28,7 @@ exports.addEvent = async (req, res) => {
       });
     }
 
-    event = new Event({
+    let newEvent = new Event({
       _id: mongoose.Types.ObjectId(),
       title: title,
       poster: poster,
@@ -38,27 +38,32 @@ exports.addEvent = async (req, res) => {
       description: description,
       location: location,
       tickets: tickets,
-      minimumAgeGroup: minAge,
-      dates: dates
+      minimumAge: minAge,
+      dates: dates,
+      host: req.user._id
     });
 
-    const host = Host.findById(req.host._id).events.push(savedObject._id);
+    let host = await Host.findById(req.user._id)
 
-    [event, host] = await Promise.all([event.save(), host.save()]);
+    host.events.push(newEvent._id);
+
+    [newEvent, host] = await Promise.all([newEvent.save(), host.save()]);
 
     res.status(201).json({
       message: "Event successfully added",
       event: {
-        _id: event.savedObject._id,
-        title: event.savedObject.title,
-        category: event.savedObject.category,
-        location: event.savedObject.location,
-        dates: event.savedObject.dates
+        _id: newEvent._id,
+        title: newEvent.title,
+        category: newEvent.category,
+        location: newEvent.location,
+        dates: newEvent.dates
       },
     });
   } catch (error) {
+    console.log(error);
+
     res.status(400).json({
-      error: "Vehicle could not be registered, please try again.",
+      error: "Event could not be registered, please try again.",
     });
   }
 }
@@ -128,7 +133,7 @@ exports.deleteEvent = async (req, res) => {
       });
     }
 
-    let host = await Host.findById(req.host._id);
+    let host = await Host.findById(req.user._id);
 
     host.vehicles.pull(vehicleId);
 
@@ -198,7 +203,7 @@ exports.viewEvents = async (req, res) => {
   res.setHeader('access-token', req.token);
 
   try {
-    const events = await Event.find({ "host": req.host._id });
+    const events = await Event.find({ "host": req.user._id });
 
     res.status(200).json({ events: events });
   } catch (error) {

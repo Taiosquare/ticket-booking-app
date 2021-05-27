@@ -44,7 +44,9 @@ router
     authController.setNewPassword
   );
 
-router.route("/confirm/:token").get(authController.confirmMail);
+router.route("/confirmMail/:token").get(authController.confirmMail);
+
+router.route("/resendConfirmationMail").post(authController.resendConfirmationMail);
 
 router.route("/user/facebook")
   .get(

@@ -33,16 +33,12 @@ const returnValidationError = async (res, errors) => {
   });
 }
 
-const sendConfirmationMail = async (email, userType, sendType, name, baseURL) => {
-  const token = await crypto.randomBytes(16).toString("hex");
-
-  const link = `${baseURL}/auth/${sendType}?verify=${token}`;
-
+const sendConfirmationMail = async (token, email, userType, sendType, name, baseURL) => {
   let from = `Energy Direct energydirect@outlook.com`,
     to = email,
     subject = `${userType} Account Confirmation`,
     html = `<p>Good Day ${name},</p> 
-              <p>Please click this <a href=${link}>link</a> 
+              <p>Please click this <a href="${baseURL}/auth/${sendType}?verify=${token}">link</a>
               to confirm your email.</p>`;
 
   const data = {

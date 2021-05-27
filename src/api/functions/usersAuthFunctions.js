@@ -3,6 +3,7 @@ const { Admin } = require("../models/admin"),
     { User } = require("../models/user"),
     mongoose = require("mongoose"),
     argon2 = require("argon2"),
+    crypto = require("crypto"),
     AuthFunctions = require("../functions/authFunctions"),
     GeneralFunctions = require("../functions/generalFunctions"),
     { validationResult } = require("express-validator");
@@ -42,6 +43,8 @@ module.exports.adminRegister = async (req, res) => {
 
         const { username, firstname, lastname, email } = req.body;
 
+        const token = await crypto.randomBytes(16).toString("hex");
+
         const savedObject = await Admin.create({
             _id: id,
             username: username,
@@ -50,11 +53,13 @@ module.exports.adminRegister = async (req, res) => {
             email: email,
             password: hashedPassword,
             approvedHosts: [],
+            confirmationToken: token,
+            confirmationTokenExpiration: Date.now() + 3600000
         });
 
         const baseURL = req.headers.baseurl;
 
-        await GeneralFunctions.sendConfirmationMail(email, "Admin", "admin", firstname, baseURL)
+        await GeneralFunctions.sendConfirmationMail(token, email, "Admin", "admin", firstname, baseURL);
 
         res.status(201).json({
             message: "Admin successfully added.",
@@ -138,7 +143,7 @@ module.exports.adminLogin = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(400).json({
             error: "Login Process Failed, Please Try Again"
         });
     }
@@ -173,7 +178,7 @@ module.exports.hostRegister = async (req, res) => {
             access = await AuthFunctions.generateAuthToken(id),
             refresh = await AuthFunctions.generateRefreshToken(id);
 
-        const newHost = new Host({
+        const savedObject = await Host.create({
             _id: id,
             brandName: brandName,
             brandType: brandType,
@@ -187,11 +192,11 @@ module.exports.hostRegister = async (req, res) => {
             events: []
         });
 
-        const savedObject = await newHost.save();
-
         const baseURL = req.headers.baseurl;
 
-        await GeneralFunctions.sendConfirmationMail(email, "Host", "host", brandName, baseURL);
+        const token = await crypto.randomBytes(16).toString("hex");
+
+        await GeneralFunctions.sendConfirmationMail(token, brandEmail, "Host", "host", brandName, baseURL);
 
         res.status(201).json({
             message: "Host successfully registered.",
@@ -272,7 +277,7 @@ exports.hostLogin = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({ error: "Login Process Failed, Please Try Again" });
+        res.status(400).json({ error: "Login Process Failed, Please Try Again" });
     }
 };
 
@@ -320,7 +325,9 @@ exports.userRegister = async (req, res) => {
 
         const baseURL = req.headers.baseurl;
 
-        await GeneralFunctions.sendConfirmationMail(email, "User", "user", firstname, baseURL);
+        const token = await crypto.randomBytes(16).toString("hex");
+
+        await GeneralFunctions.sendConfirmationMail(token, email, "User", "user", firstname, baseURL);
 
         res.status(201).json({
             message: "User successfully registered.",
@@ -342,6 +349,8 @@ exports.userRegister = async (req, res) => {
             },
         });
     } catch (error) {
+        console.log(error);
+
         res.status(400).json({
             error: "User could not be registered, please try again.",
         });
@@ -352,7 +361,7 @@ exports.userLogin = async (req, res) => {
     try {
         const errors = validationResult(req);
 
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -361,7 +370,7 @@ exports.userLogin = async (req, res) => {
         }
 
         let user = await User.findOne({
-            username: username,
+            email: email,
         });
 
         if (!user) {
@@ -370,14 +379,14 @@ exports.userLogin = async (req, res) => {
             });
         }
 
-        if (!await argon2.verify(host.password, password)) {
+        if (!await argon2.verify(user.password, password)) {
             return res.status(400).json({
                 error: "Invalid Email or Password"
             });
         }
 
-        let refreshToken = await AuthFunctions.generateRefreshToken(host._id),
-            accessToken = await AuthFunctions.generateAuthToken(host._id);
+        let refreshToken = await AuthFunctions.generateRefreshToken(user._id),
+            accessToken = await AuthFunctions.generateAuthToken(user._id);
 
         user.token = refreshToken;
 
@@ -402,6 +411,7 @@ exports.userLogin = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({ error: "Login Process Failed, Please Try Again" });
+        console.log(error);
+        res.status(400).json({ error: "Login Process Failed, Please Try Again" });
     }
 };

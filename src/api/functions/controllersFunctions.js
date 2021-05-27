@@ -59,15 +59,15 @@ const sendResetPasswordLink = async (req, res, email, Model, userType, sendType)
 
         if (userType == "Admin") { name = user.username; }
         if (userType == "Host") { name = user.brandName; }
-        if (userType == "User") { name = user.firstname }
+        if (userType == "User") { name = user.firstname; }
 
-        address = GeneralFunctions.environmentCheck(process.env.NODE_ENV);
+        const baseURL = req.headers.baseurl;
 
         let from = `Energy Direct energydirect@outlook.com`,
             to = user.email,
             subject = `${userType} Account Password Reset`,
             html = `<p>Good Day ${name},</p> 
-        <p>Please click this <a href="${address}/auth/${sendType}/reset/${token}">
+        <p>Please click this <a href="${baseURL}/auth/${sendType}?reset=${token}">
         link</a> to reset your password.</p>`;
 
         const data = {
@@ -173,11 +173,55 @@ const confirmMail = async (req, res, token, Model, userType) => {
             message: `${userType} E-Mail Successfully Confirmed`,
         });
     } catch (error) {
+        console.log(error);
+
         res.status(400).json({
             error: `${userType} E-Mail Failed to Confirm`
         });
     }
 }
+
+const resendConfirmationMail = async (req, res, id, Model, userType, sendType) => {
+    try {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                errors: await GeneralFunctions.validationErrorCheck(errors)
+            });
+        }
+
+        const token = await crypto.randomBytes(16).toString("hex");
+        let user = await Model.findById(id);
+
+        if (!user.email) {
+            return res.status(400).json({
+                error: "E-Mail Address not Registered"
+            });
+        }
+
+        const baseURL = req.headers.baseurl;
+
+        if (userType == "Admin") { name = user.username; }
+        if (userType == "Host") { name = user.brandName; }
+        if (userType == "User") { name = user.firstname; }
+
+        await GeneralFunctions.sendConfirmationMail(token, user.email, userType, sendType, name, baseURL)
+
+        user.confirmationToken = token;
+        user.confirmationTokenExpiration = Date.now() + 3600000;
+
+        await user.save();
+
+        res
+            .status(200)
+            .json({ message: "E-Mail Confirmation Link Successfully Sent" });
+    } catch (error) {
+        res
+            .status(400)
+            .json({ error: "E-Mail Confirmation Link Failed to Send" });
+    }
+};
 
 
 module.exports.logout = logout;
@@ -185,3 +229,4 @@ module.exports.sendResetPasswordLink = sendResetPasswordLink;
 module.exports.resetPassword = resetPassword;
 module.exports.setNewPassword = setNewPassword;
 module.exports.confirmMail = confirmMail;
+module.exports.resendConfirmationMail = resendConfirmationMail;
