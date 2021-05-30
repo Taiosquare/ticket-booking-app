@@ -173,7 +173,6 @@ const EventSchema = new Schema(
 
     location: {
       type: LocationSchema,
-      required: true,
     },
 
     tickets: {
@@ -187,6 +186,7 @@ const EventSchema = new Schema(
 
     availableSpace: {
       type: Number,
+      required: true
     },
 
     dates: {

@@ -17,7 +17,8 @@ exports.addEvent = async (req, res) => {
 
     const {
       title, poster, type, category,
-      keywords, description, location, tickets, minAge, dates
+      keywords, description, location,
+      tickets, minAge, dates, availableSpace
     } = req.body;
 
     let event = await Event.findOne({ title: title, host: req.user._id });
@@ -40,10 +41,11 @@ exports.addEvent = async (req, res) => {
       tickets: tickets,
       minimumAge: minAge,
       dates: dates,
+      availableSpace: availableSpace,
       host: req.user._id
     });
 
-    let host = await Host.findById(req.user._id)
+    let host = await Host.findById(req.user._id);
 
     host.events.push(newEvent._id);
 
@@ -84,15 +86,15 @@ exports.editEvent = async (req, res) => {
 
     req.body.title && (event.title = req.body.title);
     req.body.poster && (event.poster = req.body.poster);
-    req.body.public && (event.isPublic = req.body.public);
-    req.body.virtual && (event.isVirtual = req.body.virtual);
+    req.body.type && (event.type = req.body.type);
     req.body.category && (event.category = req.body.category);
-    req.body.keywords && (event.keywords = req.body.keywords);
+    (req.body.keywords || (req.body.keywords == null)) && (event.keywords = req.body.keywords);
     req.body.description && (event.description = req.body.description);
     req.body.location && (event.location = req.body.location);
     req.body.tickets && (event.tickets = req.body.tickets);
-    req.body.minAge && (event.minimumAgeGroup = req.body.minAge);
+    (req.body.minimumAge || (req.body.minimumAge == null)) && (event.minimumAge = req.body.minimumAge);
     req.body.dates && (event.dates = req.body.dates);
+    req.body.availableSpace && (event.availableSpace = req.body.availableSpace);
 
     const result = await event.save();
 
@@ -107,6 +109,8 @@ exports.editEvent = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error);
+
     res.status(400).json({
       error: "Event Details Failed to Update, please try again.",
     });
@@ -127,7 +131,7 @@ exports.deleteEvent = async (req, res) => {
 
     let event = await Event.findById(id);
 
-    if (event.host != req.user._id) {
+    if (event.host.toString() != req.user._id.toString()) {
       return res.status(400).json({
         error: "This User cannot delete this event",
       });
@@ -135,7 +139,7 @@ exports.deleteEvent = async (req, res) => {
 
     let host = await Host.findById(req.user._id);
 
-    host.vehicles.pull(vehicleId);
+    host.events.pull(id);
 
     await host.save();
 

@@ -293,7 +293,7 @@ exports.userRegister = async (req, res) => {
             });
         }
 
-        let user = await Host.findOne({
+        let user = await User.findOne({
             $or: [{ username: username },
             { email: email }]
         });
@@ -309,7 +309,7 @@ exports.userRegister = async (req, res) => {
             access = await AuthFunctions.generateAuthToken(id),
             refresh = await AuthFunctions.generateRefreshToken(id);
 
-        const newUser = new User({
+        const savedObject = User.create({
             _id: id,
             username: username,
             firstname: firstname,
@@ -320,8 +320,6 @@ exports.userRegister = async (req, res) => {
             payments: [],
             ratedEvents: []
         });
-
-        const savedObject = await newUser.save();
 
         const baseURL = req.headers.baseurl;
 

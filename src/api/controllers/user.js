@@ -7,18 +7,19 @@ const { Event } = require("../models/event"),
   { validationResult } = require("express-validator");
 
 exports.searchEvents = async (req, res) => {
-  // Search Criterias: title, category, isVirtual, isPublic, location, dates
-  try {
+  try { // Search Criterias: title, category, isVirtual, isPublic, location, dates, ticket price
     res.setHeader('access-token', req.token);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({
+      return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
       });
     }
 
     const keyword = req.body.keyword || "";
+
+    console.log(keyword);
 
     const events = await Event.find(
       { $text: { $search: keyword } },
@@ -33,6 +34,8 @@ exports.searchEvents = async (req, res) => {
       events: events
     });
   } catch (error) {
+    console.log(error);
+
     res.status(400).json({
       error: "error Fetching Events",
     });
