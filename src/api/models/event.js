@@ -62,10 +62,6 @@ const DateSchema = new Schema({
   days: {
     type: Number
   },
-
-  //   times: {
-  //     type: Array
-  //   }
 });
 
 const DateRangeSchema = new Schema({
@@ -80,11 +76,6 @@ const DateRangeSchema = new Schema({
 });
 
 const TicketsSchema = new Schema({
-  // type: {
-  //   type: String,
-  //   required: true,
-  // },
-
   datesAvailable: {
     type: DateRangeSchema,
     required: true,
@@ -104,35 +95,9 @@ const TicketsSchema = new Schema({
     type: Number,
     required: true,
   },
-
-  // additionalInfo: {
-  //   type: String,
-  // },
-
-  // items: {
-  //   type: [String]
-  // }
 });
 
-// const PerksSchema = new Schema({
-//   reward: {
-//     type: String,
-//     required: true
-//   },
-//   condition: {
-//     type: String,
-//     required: true
-//   },
-//   discount: {
-//     type: Number,
-//     default: 0
-//   },
-//   note: {
-//     type: String,
-//     set: set.deleteEmpty
-//   }
-// });
-
+// Hacks: - Try and populate again without autoIndex turned off, implement function
 const EventSchema = new Schema(
   {
     _id: {
@@ -143,7 +108,6 @@ const EventSchema = new Schema(
     title: {
       type: String,
       required: true,
-      index: "text"
     },
 
     poster: {
@@ -153,13 +117,12 @@ const EventSchema = new Schema(
 
     type: {
       type: String,
-      required: true
+      required: true,
     },
 
     category: {
       type: String,
       required: true,
-      index: "text"
     },
 
     keywords: {
@@ -220,14 +183,31 @@ const EventSchema = new Schema(
         }
       }
     ],
-
-    transferCode: String,
   },
   {
     autoCreate: true,
     strict: false,
     autoIndex: false,
     timestamps: true,
+  }
+);
+
+EventSchema.index(
+  {
+    title: "text",
+    type: "text",
+    category: "text",
+    "location.state": "text",
+    "date.begin": "text",
+  },
+  {
+    weights: {
+      title: 5,
+      "location.state": 4,
+      category: 4,
+      type: 3
+    },
+    name: "TextIndex"
   }
 );
 

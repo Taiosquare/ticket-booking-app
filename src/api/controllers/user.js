@@ -8,7 +8,7 @@ const { Event } = require("../models/event"),
 
 exports.searchEvents = async (req, res) => {
   try { // Search Criterias: title, category, isVirtual, isPublic, location, dates, ticket price
-    res.setHeader('access-token', req.token);
+    //res.setHeader('access-token', req.token);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -19,16 +19,21 @@ exports.searchEvents = async (req, res) => {
 
     const keyword = req.body.keyword || "";
 
-    console.log(keyword);
+    // const events = await Event.find(
+    //   { $text: { $search: keyword } },
+    //   { score: { $meta: "textScore" } }
+    // )
+    //   .sort({ score: { $meta: "textScore" } })
+    //   .select("title category location dates");
 
     const events = await Event.find(
       { $text: { $search: keyword } },
-      { score: { $meta: "textScore" } }
     )
-      .sort({ score: { $meta: "textScore" } })
-      .select("title category location dates")
+      .select("title category location dates");
 
     //events == null ? events = :
+
+    console.log(events);
 
     res.status(200).json({
       events: events
@@ -89,7 +94,7 @@ exports.rateEvent = async (req, res) => {
   }
 }
 
-exports.bookEvent = async (req, res) => {
+exports.eventBankPayment = async (req, res) => {
   // Rename to eventBankPayment
   // use event details for initiating payment
   // 2nd request should be eventBankPaymentVerification
@@ -139,6 +144,9 @@ exports.bookEvent = async (req, res) => {
       error: "Error Booking Event, please try again.",
     });
   }
+}
+
+exports.eventBankPaymentVerification = async (req, res) => {
 }
 
 exports.bankPayment = async (req, res) => {

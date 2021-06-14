@@ -1,45 +1,66 @@
-require("./db/mongoose.js");
-require("dotenv").config();
-
-const express = require("express"),
-  bodyParser = require("body-parser"),
-  helmet = require("helmet"),
-  compression = require("compression"),
-  passport = require("passport"),
-  session = require("express-session");
+const cluster = require('cluster'),
+  numCPUs = require('os').cpus().length,
+  express = require("express");
 
 const app = express();
 
-const api = require("./api/api"),
-  errorController = require("./api/controllers/error");
+cluster.schedulingPolicy = cluster.SCHED_RR;
 
-app.use(helmet());
-app.use(compression());
+if (cluster.isMaster) {
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+  cluster.on('exit', function (worker, code, signal) {
+    // console.log('Worker %d died with code/signal %s. Restarting worker...', worker.process.pid, signal || code);
+    cluster.fork();
+  });
 
-app.use(session({
-  secret: 's3cr3t',
-  resave: true,
-  saveUninitialized: true
-}));
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+} else {
+  // console.log(`Worker ${process.pid} started`);
 
-app.use(passport.initialize());
-app.use(passport.session());
+  require("./db/mongoose.js");
+  require("dotenv").config();
 
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, refresh-token");
-  next();
-});
+  const
+    bodyParser = require("body-parser"),
+    helmet = require("helmet"),
+    compression = require("compression"),
+    passport = require("passport");
 
-app.use(api);
+  const api = require("./api/api"),
+    errorController = require("./api/controllers/error");
 
-app.use(errorController.get404);
+  app.use(helmet());
+  app.use(compression());
 
-module.exports = { app };
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: false }));
+
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+    );
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, refresh-token");
+    next();
+  });
+
+  app.use(api);
+
+  app.use(errorController.get404);
+
+  const server = app.listen(process.env.PORT);
+
+  const io = require("./socket").init(server);
+
+  io.on("connection", (socket) => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+

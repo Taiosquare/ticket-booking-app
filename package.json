@@ -38,7 +38,7 @@
     "sinon": "^9.2.1"
   },
   "scripts": {
-    "start": "nodemon src/index.js",
+    "start": "nodemon src/app.js",
     "test": "jest --watch"
   },
   "repository": {
