@@ -23,7 +23,7 @@ exports.searchEvents = async (req, res) => {
     //   { $text: { $search: keyword } },
     //   { score: { $meta: "textScore" } }
     // )
-    //   .sort({ score: { $meta: "textScore" } })
+    //   .sort({ score: { $meta: "textScore" } }) // Consider using exec after sort
     //   .select("title category location dates");
 
     const events = await Event.find(
@@ -61,31 +61,52 @@ exports.rateEvent = async (req, res) => {
     const id = req.params.eventId,
       rating = req.body.rating;
 
+    // Check if User has rated the event before
+
     await User.updateOne(
       { _id: req.user._id },
       {
-        $set: {
-          "ratedEvents.id": id,
-          "ratedEvents.rating": rating
+        $push: {
+          ratedEvents: {
+            id: id,
+            rating: rating
+          }
         }
-      }
+      },
     );
 
     let event = await Event.findById(id);
 
-    // let user = await User.findById(req.user._id);
+    // await Event.updateOne(
+    //   { _id: id },
+    //   {
+    //     $set: {
+    //       'rating.averageScore': ,
+    //       'rating.numOfRatings': 
+    //     }
+    //   }
+    // )
 
-    event.rating.numofRatings++;
-    event.rating.averageScore = (event.rating.averageScore + rating) / event.rating.numofRatings;
+    event.rating.numOfRatings++;
 
-    // user.ratedEvents.id = id;
-    // user.ratedEvents.rating = rating;
+    event.rating.ratings.push(rating);
+
+    const totalRatingsSum = event.rating.ratings.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+
+    event.rating.averageScore = (totalRatingsSum) / event.rating.numOfRatings;
 
     await event.save();
-    // await user.save();
 
     res.status(200).json({
-      message: 'Event successfully rated'
+      message: 'Event successfully rated',
+      rating: rating,
+      event: {
+        title: event.title,
+        averageRating: Math.round((event.rating.averageScore + Number.EPSILON) * 100) / 100,
+        totalRatings: event.rating.numOfRatings
+      }
     });
   } catch (error) {
     res.status(400).json({
@@ -174,8 +195,29 @@ exports.viewEvent = async (req, res) => {
   const errors = validationResult(req);
 
   try {
-    const id = req.body.id,
-      event = await Event.findById(id);
+    console.log(req.params.id);
+
+    const event = await Event.aggregate([
+      { $match: { '_id': req.params.id } },
+      {
+        $project: {
+          title: 1,
+          poster: 1,
+          location: {
+            address: 1,
+          },
+          rating: {
+            averageScore: 1
+          },
+          category: 1,
+          description: 1,
+          tickets: 1,
+          minimumAge: 1,
+          createdAt: 1,
+          updatedAt: 1
+        }
+      }
+    ]);
 
     res.status(200).json({ event: event });
   } catch (error) {

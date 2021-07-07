@@ -42,6 +42,11 @@ exports.addEvent = async (req, res) => {
       minimumAge: minAge,
       dates: dates,
       availableSpace: availableSpace,
+      rating: {
+        averageScore: 0,
+        numOfRatings: 0
+      },
+      users: [],
       host: req.user._id
     });
 

@@ -163,7 +163,13 @@ const EventSchema = new Schema(
 
       numOfRatings: {
         type: Number
-      }
+      },
+
+      ratings: [
+        {
+          type: Number
+        }
+      ],
     },
 
     host: {

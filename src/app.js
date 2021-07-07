@@ -12,7 +12,7 @@ if (cluster.isMaster) {
   }
 
   cluster.on('exit', function (worker, code, signal) {
-    // console.log('Worker %d died with code/signal %s. Restarting worker...', worker.process.pid, signal || code);
+    console.log('Worker %d died with code/signal %s. Restarting worker...', worker.process.pid, signal || code);
     cluster.fork();
   });
 
@@ -20,7 +20,7 @@ if (cluster.isMaster) {
     console.log(`worker ${worker.process.pid} died`);
   });
 } else {
-  // console.log(`Worker ${process.pid} started`);
+  console.log(`Worker ${process.pid} started`);
 
   require("./db/mongoose.js");
   require("dotenv").config();
@@ -59,7 +59,7 @@ if (cluster.isMaster) {
   const io = require("./socket").init(server);
 
   io.on("connection", (socket) => {
-    console.log(`Server running on port ${port}`);
+    console.log(`Server running on port ${process.env.PORT}`);
   });
 }
 
