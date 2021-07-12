@@ -22,6 +22,8 @@ exports.paymentSuccess = async (req, res) => {
     if (hash == req.headers['x-paystack-signature']) {
       let event = JSON.parse(req.body);
 
+      console.log(event);
+
       if (event.event == 'charge.success') {
         await GeneralFunctions.userSavePayment(event);
       } else if (event.event == 'transfer.success') {

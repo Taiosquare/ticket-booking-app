@@ -7,8 +7,8 @@ const { Event } = require("../models/event"),
   { validationResult } = require("express-validator");
 
 exports.searchEvents = async (req, res) => {
-  try { // Search Criterias: title, category, isVirtual, isPublic, location, dates, ticket price
-    //res.setHeader('access-token', req.token);
+  try {
+    res.setHeader('access-token', req.token);
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -23,7 +23,7 @@ exports.searchEvents = async (req, res) => {
     //   { $text: { $search: keyword } },
     //   { score: { $meta: "textScore" } }
     // )
-    //   .sort({ score: { $meta: "textScore" } }) // Consider using exec after sort
+    //   .sort({ score: { $meta: "textScore" } }) 
     //   .select("title category location dates");
 
     const events = await Event.find(
@@ -48,10 +48,10 @@ exports.searchEvents = async (req, res) => {
 }
 
 exports.rateEvent = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req);
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({
         errors: await GeneralFunctions.validationErrorCheck(errors)
@@ -76,16 +76,6 @@ exports.rateEvent = async (req, res) => {
     );
 
     let event = await Event.findById(id);
-
-    // await Event.updateOne(
-    //   { _id: id },
-    //   {
-    //     $set: {
-    //       'rating.averageScore': ,
-    //       'rating.numOfRatings': 
-    //     }
-    //   }
-    // )
 
     event.rating.numOfRatings++;
 
@@ -116,10 +106,14 @@ exports.rateEvent = async (req, res) => {
 }
 
 exports.eventBankPayment = async (req, res) => {
-  // Rename to eventBankPayment
-  // use event details for initiating payment
-  // 2nd request should be eventBankPaymentVerification
-  // The details should then be saved there
+  EventFunctions.bankPayment(req, res, req.params.eventId);
+}
+
+exports.eventBankPaymentVerification = async (req, res) => {
+  EventFunctions.bankPaymentVerification(req, res, req.params.eventId);
+}
+
+exports.saveEventDetails = async (req, res) => {
   try {
     res.setHeader('access-token', req.token);
     const errors = validationResult(req);
@@ -130,35 +124,32 @@ exports.eventBankPayment = async (req, res) => {
       });
     }
 
-    const { eventId, userId, spacesBooked, payment: { email, amount, bank, birthday } } = req.body;
+    const { spacesBooked } = req.body;
+    const eventId = req.params.eventId;
+    const userId = req.user._id;
 
-    let user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(400).json({
-        error: "Non-Existent User",
-      });
-    }
-
-    //add user to events users during payment
-    let event = await Event.updateOne(
+    await Event.updateOne(
       { _id: eventId },
       {
-        $set: { $subtract: ["$availableSpace", spacesBooked] },
+        $inc: { availableSpace: -Math.abs(spacesBooked) }
       }
     );
 
-    user.bookedEvents.push({
-      _id: eventId,
-      spaceReserved: spacesBooked
-    });
-
-    await user.save();
+    await User.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          bookedEvents: {
+            _id: eventId,
+            spacesReserved: spacesBooked
+          }
+        }
+      }
+    );
 
     res.status(201).json({
-      message: "Event successfully booked. Your booking will expire if you don't pay within 24 hours.",
+      message: "Event successfully booked. Please check your email address for your ticket(s).",
       spacesBooked: spacesBooked,
-      ticketPrice: event.tickets.price
     });
   } catch (error) {
     res.status(400).json({
@@ -167,35 +158,24 @@ exports.eventBankPayment = async (req, res) => {
   }
 }
 
-exports.eventBankPaymentVerification = async (req, res) => {
-}
-
-exports.bankPayment = async (req, res) => {
-  EventFunctions.bankPayment(req, res, req.params.eventId);
-}
-
-exports.verifyBankPayment = async (req, res) => {
-  EventFunctions.bankPaymentVerification(req, res, req.params.eventId);
-}
-
-exports.ussdPayment = async (req, res) => {
+exports.eventUSSDPayment = async (req, res) => {
   EventFunctions.ussdPayment(req, res, req.params.eventId);
 }
 
-exports.verifyUssdPayment = async (req, res) => {
+exports.eventUSSDPaymentVerification = async (req, res) => {
   EventFunctions.ussdPaymentVerification(req, res, req.params.eventId);
 }
 
-exports.printTicket = async (req, res) => {
-
-}
-
 exports.viewEvent = async (req, res) => {
-  res.setHeader('access-token', req.token);
-  const errors = validationResult(req);
-
   try {
-    console.log(req.params.id);
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    }
 
     const event = await Event.aggregate([
       { $match: { '_id': req.params.id } },
@@ -228,9 +208,16 @@ exports.viewEvent = async (req, res) => {
 }
 
 exports.viewBookedEvents = async (req, res) => {
-  res.setHeader('access-token', req.token);
-
   try {
+    res.setHeader('access-token', req.token);
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: await GeneralFunctions.validationErrorCheck(errors)
+      });
+    }
+
     const user = await User.findById(req.user._id);
 
     const bookedEvents = user.bookedEvents.populate("bookedEvents", "title location.state dates");

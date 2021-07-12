@@ -4,8 +4,7 @@ const { User } = require("../models/user"),
   { Account } = require("../models/account"),
   { Event } = require("../models/event"),
   { Ticket } = require("../models/ticket"),
-  mailer = require("../../services/mailer"),
-  crypto = require("crypto");
+  mailer = require("../../services/mailer");
 
 const environmentCheck = async (env) => {
   let address = "";
@@ -54,19 +53,21 @@ const sendConfirmationMail = async (token, email, userType, sendType, name, base
 const hostSavePayment = async (event) => {
   let event2 = await Event.find({ transferCode: event.data.transfer_code });
 
-  let account = await Account.findOne({ host: event2.host }),
-    payment = {};
-
-  payment.reference = event.data.reference;
-  payment.amount = event.data.amount / 100;
-  payment.currency = event.data.currency;
-  payment.paidAt = event.data.paid_at;
-  payment.bank = event.data.authorization.bank;
-  payment.event = event._id;
-
-  account.payments.push(payment);
-
-  await account.save();
+  await Account.updateOne(
+    { host: event2.host },
+    {
+      $push: {
+        payments: {
+          reference: event.data.reference,
+          amount: event.data.amount / 100,
+          currency: event.data.currency,
+          paidAt: event.data.paid_at,
+          bank: event.data.authorization.bank,
+          tickets: ticketIds
+        }
+      }
+    }
+  )
 }
 
 const userSavePayment = async (event) => {
@@ -76,19 +77,21 @@ const userSavePayment = async (event) => {
     return ticket._id;
   });
 
-  let user = await User.findById(tickets[0].user),
-    payment = {};
-
-  payment.reference = event.data.reference;
-  payment.amount = event.data.amount / 100;
-  payment.currency = event.data.currency;
-  payment.paidAt = event.data.paid_at;
-  payment.bank = event.data.authorization.bank;
-  payment.tickets = ticketIds;
-
-  user.payments.push(payment);
-
-  await user.save();
+  await User.updateOne(
+    { _id: tickets[0].user },
+    {
+      $push: {
+        payments: {
+          reference: event.data.reference,
+          amount: event.data.amount / 100,
+          currency: event.data.currency,
+          paidAt: event.data.paid_at,
+          bank: event.data.authorization.bank,
+          tickets: ticketIds
+        }
+      }
+    }
+  );
 }
 
 const createRecepientCode = async (name, accountNumber, bankName) => {

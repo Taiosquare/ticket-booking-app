@@ -19,52 +19,38 @@ router
   );
 
 router
-  .route("/eventBankPayment")
+  .route("/eventBankPayment/:eventId")
   .post(
     authenticate.user,
     userController.eventBankPayment
   );
 
 router
-  .route("/eventBankPaymentVerification")
-  .post(
+  .route("/eventBankPaymentVerification/:eventId")
+  .put(
     authenticate.user,
     userController.eventBankPaymentVerification
   );
 
 router
-  .route("/ticketPurchase/bank/:eventId")
+  .route("/bookEvent/:eventId")
   .post(
     authenticate.user,
-    userController.bankPayment
+    userController.saveEventDetails
   );
 
 router
-  .route("/verifyTicketPurchase/bank/:eventId")
-  .put(
-    authenticate.user,
-    userController.verifyBankPayment
-  );
-
-router
-  .route("/ticketPurchase/ussd/:eventId")
+  .route("/eventUSSDPayment/:eventId")
   .post(
     authenticate.user,
-    userController.ussdPayment
+    userController.eventUSSDPayment
   );
 
 router
-  .route("/verifyTicketPurchase/ussd/:eventId")
+  .route("/eventUSSDPaymentVerification/:eventId")
   .put(
     authenticate.user,
-    userController.verifyUssdPayment
-  );
-
-router
-  .route("/printTicket")
-  .get(
-    authenticate.user,
-    userController.printTicket
+    userController.eventUSSDPaymentVerification
   );
 
 router

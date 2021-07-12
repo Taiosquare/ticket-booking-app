@@ -2,18 +2,20 @@ require("dotenv").config();
 
 const { Event } = require("../models/event"),
     { Ticket } = require("../models/ticket"),
+    { User } = require("../models/user"),
     crypto = require("crypto"),
     mongoose = require("mongoose"),
+    { validationResult } = require("express-validator"),
     fetch = require("node-fetch");
 
-const generateTickets = async (event, numOfTickets, reference) => {
+const generateTickets = async (event, numOfTickets, reference, userId) => {
     let tickets = [];
 
     for (let i = 0; i < numOfTickets; i++) {
         let ticket = new Ticket({
             _id: mongoose.Types.ObjectId(),
             ticketNo: await crypto.randomBytes(8),
-            user: req.user._id,
+            user: userId,
             event: {
                 _id: event._id,
                 title: event.title,
@@ -28,8 +30,13 @@ const generateTickets = async (event, numOfTickets, reference) => {
 
         await ticket.save();
 
+        // send tickets to email
         tickets.push(ticket);
     }
+
+    const user = await User.findById(req.user._id);
+
+    //user.email
 }
 
 const bankPayment = async (req, res, eventId) => {
@@ -45,16 +52,16 @@ const bankPayment = async (req, res, eventId) => {
 
         const { email, bank, birthday, numOfTickets } = req.body;
 
-        let event = await Event.findById(eventId);
+        const event = await Event.findById(eventId);
 
         const params = {
             email: email,
-            amount: event.tickets.price * numOfTickets,
+            amount: (event.tickets.price * numOfTickets) * 100,
             bank: bank,
             birthday: birthday
         };
 
-        let response = await fetch(`https://api.paystack.co/charge`, {
+        const response = await fetch(`https://api.paystack.co/charge`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
@@ -63,11 +70,11 @@ const bankPayment = async (req, res, eventId) => {
             body: JSON.stringify(params),
         });
 
-        let response2 = await response.json();
+        const response2 = await response.json();
 
         if (response2.status == true) {
             res.status(200).json({
-                message: 'Tickets Payment have successfully been initiated, awaiting verification from user',
+                message: 'Ticket Payment has successfully been initiated, awaiting verification from user',
                 reference: response2.data.reference
             });
         } else {
@@ -123,11 +130,11 @@ const bankPaymentVerification = async (req, res, eventId) => {
         let response2 = await response.json();
 
         if (response2.status == true) {
-            await generateTickets(event, numOfTickets, reference);
-
             res.status(200).json({
                 message: 'Payment has successfully been verified.',
             });
+
+            await generateTickets(event, numOfTickets, reference, req.user._id);
         } else {
             res.status(400).json({
                 error: 'Error: The Payment could not be verified, please try again.',
@@ -153,17 +160,17 @@ const ussdPayment = async (req, res, eventId) => {
 
         const { email, ussd, numOfTickets } = req.body;
 
-        let event = await Event.findById(eventId);
+        const event = await Event.findById(eventId);
 
         const params = {
             email: email,
-            amount: event.tickets.price * numOfTickets,
+            amount: (event.tickets.price * numOfTickets) * 100,
             ussd: {
                 type: ussd.type,
             }
         };
 
-        let response = await fetch(`https://api.paystack.co/charge`, {
+        const response = await fetch(`https://api.paystack.co/charge`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.PAYSTACK_TEST_SECRET}`,
@@ -172,7 +179,9 @@ const ussdPayment = async (req, res, eventId) => {
             body: JSON.stringify(params),
         });
 
-        let response2 = await response.json();
+        const response2 = await response.json();
+
+        console.log(response2);
 
         if (response2.status == true) {
             res.status(200).json({
@@ -187,6 +196,8 @@ const ussdPayment = async (req, res, eventId) => {
             });
         }
     } catch (error) {
+        console.log(error);
+
         res.status(400).json({
             error: 'Error: An error occurred while trying to initiate the payment, please try again.',
         });
@@ -234,7 +245,7 @@ const ussdPaymentVerification = async (req, res, eventId) => {
         let response2 = await response.json();
 
         if (response2.status == true) {
-            await generateTickets(event, numOfTickets, reference);
+            await generateTickets(event, numOfTickets, reference, req.user._id);
 
             res.status(200).json({
                 message: 'Payment has successfully been verified.',
